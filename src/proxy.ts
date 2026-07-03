@@ -6,6 +6,9 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createIntlMiddleware(routing);
 
+const protectedRoutes = ['/dashboard', '/projects', '/editor', '/account'];
+const adminRoutes = ['/admin/dashboard', '/admin/users', '/admin/subscriptions', '/admin/transactions', '/admin/projects', '/admin/assets', '/admin/settings'];
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -29,9 +32,29 @@ export async function proxy(request: NextRequest) {
       }
     );
 
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const path = request.nextUrl.pathname;
+    const pathWithoutLocale = path.replace(/^\/(ar|en)/, '') || '/';
+
+    const isProtected = protectedRoutes.some(route => pathWithoutLocale.startsWith(route));
+    const isAdmin = adminRoutes.some(route => pathWithoutLocale.startsWith(route));
+    const isAdminLogin = pathWithoutLocale === '/admin/login';
+
+    if (isProtected && !user) {
+      const url = new URL('/login', request.url);
+      url.searchParams.set('redirect', path);
+      return NextResponse.redirect(url);
+    }
+
+    if (isAdmin && !isAdminLogin && !user) {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+
+    if (user && (pathWithoutLocale === '/login' || pathWithoutLocale === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   } catch (e) {
-    // Supabase not configured - continue without auth
   }
 
   const intlResponse = intlMiddleware(request);

@@ -3,6 +3,7 @@ import {getMessages, setRequestLocale} from 'next-intl/server';
 import {routing} from '@/i18n/routing';
 import {notFound} from 'next/navigation';
 import {Cairo} from 'next/font/google';
+import {SupabaseProvider} from '@/providers/supabase-provider';
 import '../globals.css';
 
 const cairo = Cairo({ subsets: ['latin', 'arabic'] });
@@ -31,7 +32,9 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir}>
       <body className={`${cairo.className} bg-slate-950 text-white min-h-screen antialiased`} suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <SupabaseProvider>
+            {children}
+          </SupabaseProvider>
         </NextIntlClientProvider>
       </body>
     </html>
