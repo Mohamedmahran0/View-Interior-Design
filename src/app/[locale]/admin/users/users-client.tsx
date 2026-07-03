@@ -6,7 +6,7 @@ import { useAdmin } from '@/hooks/use-admin';
 import { useSupabase } from '@/providers/supabase-provider';
 import AdminSidebar from '@/components/admin/admin-sidebar';
 import type { Profile } from '@/types/database';
-import { Search, ChevronLeft, ChevronRight, X, Edit3, Ban, CheckCircle, Trash2, Eye, Plus, Minus, AlertCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, Edit3, Ban, CheckCircle, Trash2, Eye, Plus, Minus, AlertCircle, Users } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 15;
 

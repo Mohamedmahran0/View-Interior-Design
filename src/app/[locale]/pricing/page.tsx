@@ -92,8 +92,8 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
                   {features.map(({ key, scope }) => {
                     const incKey = `feature${key.charAt(0).toUpperCase() + key.slice(1)}${plan.charAt(0).toUpperCase() + plan.slice(1)}` as keyof typeof t;
                     const labelKey = `feature${key.charAt(0).toUpperCase() + key.slice(1)}` as const;
-                    const value = t(incKey);
-                    const included = value === 'true' || value === true;
+                    const value = String(t(incKey));
+                    const included = value === 'true' || value === '✓';
 
                     return (
                       <li key={key} className={`flex items-center gap-3 text-sm ${included ? 'text-white/80' : 'text-white/20'}`}>
@@ -167,12 +167,12 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
 
                         return (
                           <td key={plan} className="py-4 px-4 text-center">
-                            {value === 'true' || value === true ? (
+                            {String(value) === 'true' || value === '✓' ? (
                               <span className="text-emerald-400 flex items-center justify-center gap-1.5">
                                 <CheckCircle2 size={16} />
                                 <span className="text-xs">{t('included')}</span>
                               </span>
-                            ) : value === 'false' || value === false ? (
+                            ) : String(value) === 'false' || value === '—' ? (
                               <span className="text-white/20">{t('notIncluded')}</span>
                             ) : (
                               <span className="text-white/60">{String(value)}</span>

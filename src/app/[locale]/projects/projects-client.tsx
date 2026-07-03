@@ -227,9 +227,9 @@ export default function ProjectsClient() {
                 <div className="flex items-center justify-between mt-3">
                   <StatusBadge status={project.status} />
                   {project.is_public ? (
-                    <Globe size={14} className="text-white/40" title="Public" />
+                    <Globe size={14} className="text-white/40" />
                   ) : (
-                    <Lock size={14} className="text-white/40" title="Private" />
+                    <Lock size={14} className="text-white/40" />
                   )}
                 </div>
               </div>

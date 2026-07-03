@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2026-06-24.dahlia',
 });
 
 export async function getStripeCustomers() {
@@ -35,7 +35,7 @@ export async function getRevenueStats(period: 'month' | 'year' = 'month') {
 
   const totalRevenue = payments.data.reduce((sum, p) => sum + p.amount, 0);
   const successful = payments.data.filter(p => p.status === 'succeeded').length;
-  const failed = payments.data.filter(p => p.status === 'failed').length;
+  const failed = payments.data.filter(p => (p.status as string) === 'failed').length;
 
   return { totalRevenue: totalRevenue / 100, successful, failed };
 }
