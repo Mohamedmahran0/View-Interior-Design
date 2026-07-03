@@ -5,7 +5,7 @@ import { useRouter } from '@/i18n/routing';
 import { useAdmin } from '@/hooks/use-admin';
 import { useSupabase } from '@/providers/supabase-provider';
 import AdminSidebar from '@/components/admin/admin-sidebar';
-import type { Profile, SubscriptionPlan, AdminRole } from '@/types/database';
+import type { Profile, SubscriptionPlan, AdminRoleRecord, AdminRole } from '@/types/database';
 import { Save, X, AlertCircle, Download, Plus, Trash2, Shield, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 export default function AdminSettings() {
@@ -30,9 +30,9 @@ export default function AdminSettings() {
   const [testMode, setTestMode] = useState(true);
   const [webhookUrl, setWebhookUrl] = useState('');
 
-  const [admins, setAdmins] = useState<(AdminRole & { profile?: Profile })[]>([]);
+  const [admins, setAdmins] = useState<(AdminRoleRecord & { profile?: Profile })[]>([]);
   const [addAdminEmail, setAddAdminEmail] = useState('');
-  const [addAdminRole, setAddAdminRole] = useState<AdminRole['role']>('admin');
+  const [addAdminRole, setAddAdminRole] = useState<AdminRole>('admin');
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -52,7 +52,7 @@ export default function AdminSettings() {
 
       setPlans((plansRes.data || []) as SubscriptionPlan[]);
 
-      const adminData = (adminsRes.data || []) as AdminRole[];
+      const adminData = (adminsRes.data || []) as AdminRoleRecord[];
       const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p as Profile]));
       setAdmins(adminData.map(a => ({ ...a, profile: profileMap.get(a.user_id) })));
     } catch (err) {
@@ -424,7 +424,7 @@ export default function AdminSettings() {
                   </div>
                   <div className="w-32">
                     <label className="block text-sm text-white/70 mb-1">Role</label>
-                    <select value={addAdminRole} onChange={(e) => setAddAdminRole(e.target.value as AdminRole['role'])} className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                    <select value={addAdminRole} onChange={(e) => setAddAdminRole(e.target.value as AdminRole)} className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                       <option value="admin">Admin</option>
                       <option value="super_admin">Super Admin</option>
                       <option value="support">Support</option>

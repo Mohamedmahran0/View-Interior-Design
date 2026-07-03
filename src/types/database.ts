@@ -108,7 +108,7 @@ export interface Asset {
   created_at: string;
 }
 
-export interface AdminRole {
+export interface AdminRoleRecord {
   id: string;
   user_id: string;
   role: AdminRole;

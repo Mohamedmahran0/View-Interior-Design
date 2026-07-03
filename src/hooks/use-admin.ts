@@ -7,7 +7,7 @@ import type { AdminRole } from '@/types/database';
 export function useAdmin() {
   const { supabase, user } = useSupabase();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminRole, setAdminRole] = useState<AdminRole['role'] | null>(null);
+  const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function useAdmin() {
 
       if (data) {
         setIsAdmin(true);
-        setAdminRole(data.role as AdminRole['role']);
+        setAdminRole(data.role as AdminRole);
       } else {
         setIsAdmin(false);
         setAdminRole(null);
