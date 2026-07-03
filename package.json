@@ -13,7 +13,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.12.0",
-    "@supabase/supabase-js": "^2.108.2",
+    "@supabase/supabase-js": "^2.110.0",
     "@types/three": "^0.184.1",
     "@wendylabsinc/react-three-mesh-editor": "^0.0.1",
     "lucide-react": "^1.21.0",
