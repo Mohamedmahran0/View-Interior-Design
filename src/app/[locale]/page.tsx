@@ -150,7 +150,7 @@ export default async function HomePage({
                 </li>
               ))}
             </ul>
-            <a href="/plugin/OB_Walkthrough_Exporter.mse" download className="inline-flex items-center gap-3 px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-lg transition-all hover:-translate-y-1 shadow-[0_10px_40px_rgba(255,255,255,0.1)]">
+            <a href="/plugin/my%20plugin.mcr" download className="inline-flex items-center gap-3 px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-lg transition-all hover:-translate-y-1 shadow-[0_10px_40px_rgba(255,255,255,0.1)]">
               <Download size={24} />
               {t('downloadPlugin')}
             </a>
