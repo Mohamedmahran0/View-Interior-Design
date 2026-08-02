@@ -1,13 +1,22 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { Eye, EyeOff, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Mail, Lock, User, CreditCard, Sparkles, CheckCircle2 } from 'lucide-react';
 
-export default function SignupForm() {
+const PLAN_PRICE_MAP: Record<string, string> = {
+  basic: process.env.NEXT_PUBLIC_PADDLE_PRICE_BASIC_MONTHLY || '',
+  pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY || '',
+  enterprise: process.env.NEXT_PUBLIC_PADDLE_PRICE_ENTERPRISE_MONTHLY || '',
+};
+
+function SignupFormInner() {
   const t = useTranslations('Auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get('plan') || '';
   const supabase = createClient();
 
   const [fullName, setFullName] = useState('');
@@ -18,8 +27,28 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [step, setStep] = useState<'form' | 'payment'>('form');
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/paddle.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.Paddle) {
+        window.Paddle.Initialize({
+          eventCallback: (event: any) => {
+            if (event.name === 'checkout.completed') {
+              router.push('/account/billing?success=true');
+            }
+          },
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }, [router]);
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -31,7 +60,7 @@ export default function SignupForm() {
     if (password !== confirmPassword) { setError(t('errorPasswordsMatch')); return; }
 
     setLoading(true);
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
@@ -47,9 +76,120 @@ export default function SignupForm() {
       return;
     }
 
-    setSuccess(t('successAccountCreated'));
-    setTimeout(() => router.push('/login'), 2000);
+    if (selectedPlan && PLAN_PRICE_MAP[selectedPlan]) {
+      setUserId(data?.user?.id || null);
+      setStep('payment');
+      setSuccess('Account created! Complete your subscription below.');
+    } else {
+      setSuccess(t('successAccountCreated'));
+      setTimeout(() => router.push('/login'), 2000);
+    }
   };
+
+  const handlePaddleCheckout = () => {
+    const priceId = PLAN_PRICE_MAP[selectedPlan];
+    if (!priceId || !window.Paddle) {
+      setError('Payment system is not ready. Please try again.');
+      return;
+    }
+
+    window.Paddle.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customer: email ? { email } : undefined,
+      customData: {
+        user_id: userId || '',
+        plan_name: selectedPlan,
+      },
+    });
+  };
+
+  if (step === 'payment') {
+    return (
+      <main className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/20 blur-[120px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px]"></div>
+        </div>
+
+        <div className="relative z-10 w-full max-w-md">
+          <Link href="/" className="flex items-center justify-center gap-3 mb-10 group">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center font-bold text-lg shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+              V
+            </div>
+          </Link>
+
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-[2rem] p-8 sm:p-10 shadow-2xl text-center">
+            {success && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center mb-6">
+                {success}
+              </div>
+            )}
+
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-6">
+              <CreditCard size={32} />
+            </div>
+
+            <h2 className="text-2xl font-bold mb-2">Complete Your Subscription</h2>
+            <p className="text-white/50 text-sm mb-2">
+              You selected the <span className="text-emerald-400 font-semibold capitalize">{selectedPlan}</span> plan.
+            </p>
+            <p className="text-white/40 text-xs mb-8">
+              Secure payment powered by Paddle. You can cancel anytime.
+            </p>
+
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-white/60 text-sm capitalize">{selectedPlan} Plan</span>
+                <span className="text-white/60 text-sm">/month</span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <Sparkles size={16} className="text-emerald-400" />
+                <span className="text-sm text-white/80">All features included</span>
+              </div>
+              <ul className="space-y-2 text-left">
+                {selectedPlan === 'basic' && (
+                  <>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> 50 credits/month</li>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> 10 projects</li>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> Basic support</li>
+                  </>
+                )}
+                {selectedPlan === 'pro' && (
+                  <>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> 200 credits/month</li>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> Unlimited projects</li>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> Priority support</li>
+                    <li className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 size={14} className="text-emerald-400" /> Premium assets</li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center mb-4">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handlePaddleCheckout}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]"
+            >
+              <CreditCard size={18} />
+              Proceed to Payment
+            </button>
+
+            <button
+              onClick={() => { setStep('form'); setSuccess(''); }}
+              className="w-full mt-3 py-2.5 text-sm text-white/50 hover:text-white/80 transition"
+            >
+              Back to signup
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
@@ -70,9 +210,15 @@ export default function SignupForm() {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">{t('signupTitle')}</h1>
             <p className="text-white/50">{t('signupSubtitle')}</p>
+            {selectedPlan && (
+              <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
+                <Sparkles size={12} />
+                <span className="capitalize">{selectedPlan}</span> plan selected
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSignup} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">{t('fullNameLabel')}</label>
               <div className="relative">
@@ -159,12 +305,11 @@ export default function SignupForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  {t('creatingAccount')}
+                  {selectedPlan ? 'Creating account...' : t('creatingAccount')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <UserPlus size={20} />
-                  {t('createAccount')}
+                  {selectedPlan ? <><CreditCard size={20} /> Create Account & Subscribe</> : <><UserPlus size={20} /> {t('createAccount')}</>}
                 </span>
               )}
             </button>
@@ -181,5 +326,17 @@ export default function SignupForm() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignupForm() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+      </div>
+    }>
+      <SignupFormInner />
+    </Suspense>
   );
 }

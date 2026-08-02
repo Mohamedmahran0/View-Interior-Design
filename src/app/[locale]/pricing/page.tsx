@@ -122,7 +122,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
                   </Link>
                 ) : (
                   <Link
-                    href={isFree(plan) ? '/signup' : '/signup'}
+                    href={isFree(plan) ? '/signup' : `/signup?plan=${plan}`}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition text-center ${
                       isPro
                         ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]'

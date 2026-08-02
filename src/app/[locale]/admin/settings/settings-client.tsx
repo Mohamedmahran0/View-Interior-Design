@@ -24,11 +24,12 @@ export default function AdminSettings() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [editPlanForm, setEditPlanForm] = useState({ price_monthly: 0, price_yearly: 0, credits_per_month: 0, max_projects: 0, max_storage_gb: 0, is_active: true });
 
-  const [stripePubKey, setStripePubKey] = useState('');
-  const [stripeSecKey, setStripeSecKey] = useState('');
-  const [showSecKey, setShowSecKey] = useState(false);
+  const [paddleVendorId, setPaddleVendorId] = useState('');
+  const [paddleClientToken, setPaddleClientToken] = useState('');
+  const [paddleApiKey, setPaddleApiKey] = useState('');
+  const [showPaddleKey, setShowPaddleKey] = useState(false);
+  const [paddleWebhookSecret, setPaddleWebhookSecret] = useState('');
   const [testMode, setTestMode] = useState(true);
-  const [webhookUrl, setWebhookUrl] = useState('');
 
   const [admins, setAdmins] = useState<(AdminRoleRecord & { profile?: Profile })[]>([]);
   const [addAdminEmail, setAddAdminEmail] = useState('');
@@ -374,36 +375,40 @@ export default function AdminSettings() {
 
           {activeTab === 'payment' && (
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
-              <h2 className="text-lg font-bold mb-6">Payment Settings</h2>
+              <h2 className="text-lg font-bold mb-6">Payment Settings (Paddle)</h2>
               <div className="space-y-5 max-w-2xl">
                 <div>
-                  <label className="block text-sm text-white/70 mb-1">Stripe Publishable Key</label>
-                  <input type="text" value={stripePubKey} onChange={(e) => setStripePubKey(e.target.value)} placeholder="pk_live_..." className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
+                  <label className="block text-sm text-white/70 mb-1">Paddle Vendor ID</label>
+                  <input type="text" value={paddleVendorId} onChange={(e) => setPaddleVendorId(e.target.value)} placeholder="12345" className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm text-white/70 mb-1">Stripe Secret Key</label>
+                  <label className="block text-sm text-white/70 mb-1">Paddle Client-Side Token</label>
+                  <input type="text" value={paddleClientToken} onChange={(e) => setPaddleClientToken(e.target.value)} placeholder="test_xxxxxxxx" className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">Paddle API Key (Server)</label>
                   <div className="relative">
-                    <input type={showSecKey ? 'text' : 'password'} value={stripeSecKey} onChange={(e) => setStripeSecKey(e.target.value)} placeholder="sk_live_..." className="w-full px-4 py-2.5 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
-                    <button onClick={() => setShowSecKey(!showSecKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition">
-                      {showSecKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <input type={showPaddleKey ? 'text' : 'password'} value={paddleApiKey} onChange={(e) => setPaddleApiKey(e.target.value)} placeholder="API key..." className="w-full px-4 py-2.5 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
+                    <button onClick={() => setShowPaddleKey(!showPaddleKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition">
+                      {showPaddleKey ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">Webhook Secret</label>
+                  <input type="password" value={paddleWebhookSecret} onChange={(e) => setPaddleWebhookSecret(e.target.value)} placeholder="Webhook signing secret" className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
+                  <p className="text-xs text-white/30 mt-1">Found in your Paddle dashboard under Webhooks settings.</p>
                 </div>
                 <div>
                   <label className="block text-sm text-white/70 mb-2">Mode</label>
                   <div className="flex items-center gap-4">
                     <button onClick={() => setTestMode(true)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${testMode ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-white/5 border border-white/10 text-white/50 hover:text-white'}`}>
-                      Test Mode
+                      Sandbox
                     </button>
                     <button onClick={() => setTestMode(false)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${!testMode ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-white/5 border border-white/10 text-white/50 hover:text-white'}`}>
-                      Live Mode
+                      Production
                     </button>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">Webhook URL</label>
-                  <input type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm" />
-                  <p className="text-xs text-white/30 mt-1">Configure this URL in your Stripe dashboard webhook settings.</p>
                 </div>
                 <button onClick={handleSavePayment} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 transition text-sm font-medium">
                   {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Save size={16} />}

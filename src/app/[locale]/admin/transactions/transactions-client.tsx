@@ -126,7 +126,7 @@ export default function AdminTransactions() {
     .filter(t => t.status === 'succeeded' && new Date(t.created_at).getFullYear() === now.getFullYear())
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  const stripeFees = Math.round(totalRevenue * 0.029 + transactions.filter(t => t.status === 'succeeded').length * 30);
+  const paddleFees = Math.round(totalRevenue * 0.05 + transactions.filter(t => t.status === 'succeeded').length * 0.50);
 
   const paginatedTxns = transactions.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -170,8 +170,8 @@ export default function AdminTransactions() {
             </div>
             <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 backdrop-blur-xl">
               <DollarSign size={18} className="text-red-400 mb-2" />
-              <p className="text-2xl font-bold">${(stripeFees / 100).toLocaleString()}</p>
-              <p className="text-xs text-white/40">Stripe Fees (est.)</p>
+              <p className="text-2xl font-bold">${(paddleFees / 100).toLocaleString()}</p>
+              <p className="text-xs text-white/40">Paddle Fees (est.)</p>
             </div>
           </div>
 
