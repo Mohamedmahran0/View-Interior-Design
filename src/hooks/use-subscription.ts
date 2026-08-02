@@ -17,15 +17,23 @@ export function useSubscription() {
     }
 
     const fetchSubscription = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_subscriptions')
         .select('*, plan:plan_id(*)')
         .eq('user_id', user.id)
         .eq('status', 'active')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to load subscription:', error);
+      }
 
       if (data) {
         setSubscription(data as any);
+      } else {
+        setSubscription(null);
       }
       setLoading(false);
     };

@@ -21,6 +21,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or expired session. Please login again.' }, { status: 401 });
     }
 
+    // ---- Check plan & credits before upload ----
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: profile, error: profileErr } = await serviceClient
+      .from('profiles')
+      .select('id, subscription_tier, credits_remaining, credits_used')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+    }
+
+    if (profile.credits_remaining <= 0) {
+      return NextResponse.json(
+        { error: 'Insufficient credits. Please upgrade your plan or wait for monthly reset.' },
+        { status: 402 }
+      );
+    }
+
+    const { data: plan } = await serviceClient
+      .from('subscription_plans')
+      .select('max_projects')
+      .ilike('name', profile.subscription_tier)
+      .maybeSingle();
+
+    if (plan?.max_projects && plan.max_projects < 999999) {
+      const { count } = await serviceClient
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      if (count != null && count >= plan.max_projects) {
+        return NextResponse.json(
+          { error: 'Project limit reached for your plan. Upgrade to add more projects.' },
+          { status: 402 }
+        );
+      }
+    }
+
     const { searchParams } = new URL(request.url);
     const projectName = searchParams.get('projectName') || 'Untitled';
     const description = searchParams.get('description') || '';
@@ -50,8 +89,6 @@ export async function POST(request: Request) {
     const sanitizedName = projectName.replace(/[^a-zA-Z0-9_-]/g, '_');
     const timestamp = Date.now();
     const storagePath = `${user.id}/${sanitizedName}_${timestamp}.glb`;
-
-    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const { error: uploadError } = await serviceClient.storage
       .from('projects')
@@ -87,6 +124,20 @@ export async function POST(request: Request) {
     if (dbError) {
       console.error('Database insert error:', dbError);
       return NextResponse.json({ error: 'Failed to create project record', details: dbError.message }, { status: 500 });
+    }
+
+    // ---- Deduct one credit ----
+    const { error: creditErr } = await serviceClient
+      .from('profiles')
+      .update({
+        credits_remaining: profile.credits_remaining - 1,
+        credits_used: profile.credits_used + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (creditErr) {
+      console.error('Credit deduction error:', creditErr);
     }
 
     const viewerUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(supabaseUrl).origin : 'http://localhost:3000'}/en/view/${project.id}`;

@@ -12,6 +12,12 @@ const PLAN_PRICE_MAP: Record<string, string> = {
   enterprise: process.env.NEXT_PUBLIC_PADDLE_PRICE_ENTERPRISE_MONTHLY || '',
 };
 
+const PLAN_ID_MAP: Record<string, string> = {
+  basic: '00000000-0000-0000-0000-000000000002',
+  pro: '00000000-0000-0000-0000-000000000003',
+  enterprise: '00000000-0000-0000-0000-000000000004',
+};
+
 function SignupFormInner() {
   const t = useTranslations('Auth');
   const router = useRouter();
@@ -37,6 +43,8 @@ function SignupFormInner() {
     script.onload = () => {
       if (window.Paddle) {
         window.Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+          environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox',
           eventCallback: (event: any) => {
             if (event.name === 'checkout.completed') {
               router.push('/account/billing?success=true');
@@ -98,6 +106,7 @@ function SignupFormInner() {
       customer: email ? { email } : undefined,
       customData: {
         user_id: userId || '',
+        plan_id: PLAN_ID_MAP[selectedPlan] || '',
         plan_name: selectedPlan,
       },
     });

@@ -3,15 +3,20 @@
 import { useSupabase } from '@/providers/supabase-provider';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useState, useEffect } from 'react';
-import { CreditCard, Sparkles, ArrowUpRight, AlertCircle, X, CheckCircle2, Receipt } from 'lucide-react';
-import type { Transaction } from '@/types/database';
+import { CreditCard, Sparkles, ArrowUpRight, AlertCircle, X, CheckCircle2, Receipt, Loader2 } from 'lucide-react';
+import type { Transaction, SubscriptionPlan } from '@/types/database';
+import type { PaddleWindow } from '@/lib/paddle/client';
+
+const PLAN_ORDER = ['free', 'basic', 'pro', 'enterprise'];
 
 export default function BillingContent() {
   const { supabase, user } = useSupabase();
   const { subscription, loading } = useSubscription();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
   const [cancelMsg, setCancelMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -28,20 +33,74 @@ export default function BillingContent() {
     fetchTransactions();
   }, [user, supabase]);
 
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const { data } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true);
+      if (data) {
+        const sorted = [...(data as SubscriptionPlan[])].sort(
+          (a, b) =>
+            PLAN_ORDER.indexOf(String(a.name).toLowerCase()) -
+            PLAN_ORDER.indexOf(String(b.name).toLowerCase())
+        );
+        setPlans(sorted);
+      }
+    };
+    fetchPlans();
+  }, [supabase]);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/paddle.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.Paddle) {
+        window.Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+          environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox',
+          eventCallback: () => {},
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }, []);
+
   const handleCancel = async () => {
     if (!subscription) return;
     setCancelling(true);
-    const { error } = await supabase
-      .from('user_subscriptions')
-      .update({ cancel_at_period_end: true })
-      .eq('id', subscription.id);
-    if (error) {
-      setCancelMsg({ type: 'error', text: error.message });
-    } else {
-      setCancelMsg({ type: 'success', text: 'Subscription will be canceled at the end of the billing period.' });
+    try {
+      const res = await fetch('/api/paddle/cancel', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCancelMsg({ type: 'success', text: data.message || 'Subscription canceled.' });
+      } else {
+        setCancelMsg({ type: 'error', text: data.error || 'Failed to cancel subscription.' });
+      }
+    } catch (err: any) {
+      setCancelMsg({ type: 'error', text: err.message || 'Network error.' });
     }
     setCancelling(false);
     setCancelModal(false);
+  };
+
+  const handleUpgrade = (plan: SubscriptionPlan) => {
+    const priceId = plan.paddle_price_id_monthly || plan.stripe_price_id_monthly;
+    if (!priceId || !window.Paddle) {
+      setCancelMsg({ type: 'error', text: 'Payment system is not ready. Please try again.' });
+      return;
+    }
+    setUpgrading(plan.name);
+    window.Paddle.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customData: {
+        user_id: user?.id || '',
+        plan_id: plan.id,
+        plan_name: plan.name,
+      },
+    });
+    setTimeout(() => setUpgrading(null), 5000);
   };
 
   if (loading) {
@@ -57,7 +116,8 @@ export default function BillingContent() {
   }
 
   const plan = subscription?.plan;
-  const isFree = !plan || plan.name === 'Free';
+  const isFree = !plan || String(plan.name).toLowerCase() === 'free';
+  const currentPlanName = String(plan?.name || 'Free').toLowerCase();
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -75,7 +135,11 @@ export default function BillingContent() {
         <div className="flex items-center gap-3 mb-2">
           <span className="text-3xl font-bold">{plan?.name || 'Free'}</span>
           {!isFree && plan?.price_monthly && (
-            <span className="text-white/50 text-lg">${plan.price_monthly}/mo</span>
+            <span className="text-white/50 text-lg">
+              ${Number(plan.price_monthly) > 0 && Number(plan.price_monthly) < 1
+                ? (Number(plan.price_monthly) * 100).toFixed(2)
+                : Number(plan.price_monthly).toFixed(2)}/mo
+            </span>
           )}
         </div>
 
@@ -123,6 +187,63 @@ export default function BillingContent() {
         </div>
       </div>
 
+      {plans.length > 0 && (
+        <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles size={20} className="text-emerald-400" />
+            <h2 className="text-xl font-bold">Change Plan</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {plans.map((p) => {
+              const pKey = String(p.name).toLowerCase();
+              const isCurrent = pKey === currentPlanName;
+              const price = Number(p.price_monthly || 0);
+              const priceLabel = price === 0 ? 'Free' : `$${price > 0 && price < 1 ? (price * 100).toFixed(2) : price.toFixed(2)}/mo`;
+              return (
+                <div
+                  key={p.id}
+                  className={`p-5 rounded-2xl border transition ${
+                    isCurrent
+                      ? 'bg-emerald-500/10 border-emerald-500/30'
+                      : 'bg-white/5 border-white/10 hover:border-white/25'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold capitalize">{p.name}</span>
+                    {isCurrent && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                        Current
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-white/50 text-sm mb-1">{priceLabel}</p>
+                  <p className="text-xs text-white/40 mb-4">
+                    {p.credits_per_month === 999999 || !p.credits_per_month && p.name.toLowerCase() === 'free'
+                      ? 'Unlimited credits'
+                      : `${p.credits_per_month} credits/mo`}
+                  </p>
+                  {!isCurrent && p.name.toLowerCase() !== 'free' && (
+                    <button
+                      onClick={() => handleUpgrade(p)}
+                      disabled={upgrading === p.name}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-semibold text-sm transition disabled:opacity-50"
+                    >
+                      {upgrading === p.name ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={14} />}
+                      {pKey === 'enterprise' ? 'Contact Sales' : 'Switch to ' + p.name}
+                    </button>
+                  )}
+                  {isCurrent && (
+                    <button disabled className="w-full py-2 rounded-lg bg-white/5 text-white/30 font-semibold text-sm cursor-default">
+                      Current Plan
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-8">
         <div className="flex items-center gap-3 mb-6">
           <Receipt size={20} className="text-white/50" />
@@ -152,7 +273,7 @@ export default function BillingContent() {
                     </td>
                     <td className="py-3 px-2">{tx.description || 'Subscription payment'}</td>
                     <td className="py-3 px-2 text-right font-medium">
-                      {tx.amount ? `$${(tx.amount / 100).toFixed(2)}` : '-'}
+                      {tx.amount != null ? `$${(Number(tx.amount) / 100).toFixed(2)} ${tx.currency || 'USD'}` : '-'}
                     </td>
                     <td className="py-3 px-2 text-right">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${

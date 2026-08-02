@@ -92,12 +92,22 @@ export default function AdminSubscriptions() {
     setActionLoading(true);
     setActionError('');
     try {
-      const { error } = await supabase
-        .from('user_subscriptions')
-        .update({ status: 'canceled', cancel_at_period_end: true })
-        .eq('id', selectedSub.id);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      const res = await fetch('/api/paddle/admin-cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token || ''}`,
+        },
+        body: JSON.stringify({ subscriptionId: selectedSub.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to cancel subscription');
+
       setSubscriptions(prev => prev.map(s => s.id === selectedSub.id ? { ...s, status: 'canceled' as const, cancel_at_period_end: true } : s));
       setCancelConfirmOpen(false);
     } catch (err: any) {

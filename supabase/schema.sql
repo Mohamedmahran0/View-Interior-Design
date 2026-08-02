@@ -73,6 +73,8 @@ CREATE TABLE public.subscription_plans (
     features JSONB,
     stripe_price_id_monthly TEXT,
     stripe_price_id_yearly TEXT,
+    paddle_price_id_monthly TEXT,
+    paddle_price_id_yearly TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -83,6 +85,8 @@ CREATE TABLE public.user_subscriptions (
     plan_id UUID NOT NULL REFERENCES public.subscription_plans(id),
     stripe_customer_id TEXT,
     stripe_subscription_id TEXT,
+    paddle_customer_id TEXT,
+    paddle_subscription_id TEXT,
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due', 'incomplete', 'trialing')),
     current_period_start TIMESTAMP WITH TIME ZONE,
     current_period_end TIMESTAMP WITH TIME ZONE,
@@ -90,7 +94,8 @@ CREATE TABLE public.user_subscriptions (
     trial_ends_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, stripe_subscription_id)
+    UNIQUE(user_id, stripe_subscription_id),
+    UNIQUE(user_id, paddle_subscription_id)
 );
 
 CREATE TABLE public.transactions (
@@ -99,6 +104,7 @@ CREATE TABLE public.transactions (
     user_subscription_id UUID REFERENCES public.user_subscriptions(id),
     stripe_session_id TEXT,
     stripe_payment_intent_id TEXT,
+    paddle_transaction_id TEXT,
     amount DECIMAL(10,2),
     currency TEXT DEFAULT 'USD',
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'succeeded', 'failed', 'refunded')),

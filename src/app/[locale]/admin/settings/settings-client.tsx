@@ -22,7 +22,7 @@ export default function AdminSettings() {
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
-  const [editPlanForm, setEditPlanForm] = useState({ price_monthly: 0, price_yearly: 0, credits_per_month: 0, max_projects: 0, max_storage_gb: 0, is_active: true });
+  const [editPlanForm, setEditPlanForm] = useState({ price_monthly: 0, price_yearly: 0, credits_per_month: 0, max_projects: 0, max_storage_gb: 0, paddle_price_id_monthly: '', paddle_price_id_yearly: '', is_active: true });
 
   const [paddleVendorId, setPaddleVendorId] = useState('');
   const [paddleClientToken, setPaddleClientToken] = useState('');
@@ -312,11 +312,11 @@ export default function AdminSettings() {
                       <h3 className="text-lg font-bold capitalize">{plan.name}</h3>
                       <div className="grid grid-cols-2 gap-4 max-w-lg">
                         <div>
-                          <label className="block text-xs text-white/60 mb-1">Monthly Price (cents)</label>
+                          <label className="block text-xs text-white/60 mb-1">Monthly Price ($)</label>
                           <input type="number" value={editPlanForm.price_monthly} onChange={(e) => setEditPlanForm(p => ({ ...p, price_monthly: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                         </div>
                         <div>
-                          <label className="block text-xs text-white/60 mb-1">Yearly Price (cents)</label>
+                          <label className="block text-xs text-white/60 mb-1">Yearly Price ($)</label>
                           <input type="number" value={editPlanForm.price_yearly} onChange={(e) => setEditPlanForm(p => ({ ...p, price_yearly: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                         </div>
                         <div>
@@ -330,6 +330,14 @@ export default function AdminSettings() {
                         <div>
                           <label className="block text-xs text-white/60 mb-1">Max Storage (GB)</label>
                           <input type="number" value={editPlanForm.max_storage_gb} onChange={(e) => setEditPlanForm(p => ({ ...p, max_storage_gb: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-white/60 mb-1">Paddle Price ID (Monthly)</label>
+                          <input type="text" value={editPlanForm.paddle_price_id_monthly || ''} onChange={(e) => setEditPlanForm(p => ({ ...p, paddle_price_id_monthly: e.target.value }))} placeholder="pri_..." className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-white/60 mb-1">Paddle Price ID (Yearly)</label>
+                          <input type="text" value={editPlanForm.paddle_price_id_yearly || ''} onChange={(e) => setEditPlanForm(p => ({ ...p, paddle_price_id_yearly: e.target.value }))} placeholder="pri_..." className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                         </div>
                         <div className="flex items-end pb-2">
                           <label className="flex items-center gap-2 cursor-pointer">
@@ -355,14 +363,14 @@ export default function AdminSettings() {
                           )}
                         </div>
                         <p className="text-sm text-white/60">
-                          ${((plan.price_monthly || 0) / 100).toFixed(2)}/mo · ${((plan.price_yearly || 0) / 100).toFixed(2)}/yr · {plan.credits_per_month || 0} credits · {plan.max_projects ?? '∞'} projects
+                          ${(plan.price_monthly || 0).toFixed(2)}/mo · ${(plan.price_yearly || 0).toFixed(2)}/yr · {plan.credits_per_month || 0} credits · {plan.max_projects ?? '∞'} projects
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={() => handleTogglePlanActive(plan)} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition text-xs">
                           {plan.is_active ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button onClick={() => { setEditingPlan(plan); setEditPlanForm({ price_monthly: plan.price_monthly || 0, price_yearly: plan.price_yearly || 0, credits_per_month: plan.credits_per_month || 0, max_projects: plan.max_projects || 0, max_storage_gb: plan.max_storage_gb || 0, is_active: plan.is_active }); }} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition text-xs">
+                        <button onClick={() => { setEditingPlan(plan); setEditPlanForm({ price_monthly: plan.price_monthly || 0, price_yearly: plan.price_yearly || 0, credits_per_month: plan.credits_per_month || 0, max_projects: plan.max_projects || 0, max_storage_gb: plan.max_storage_gb || 0, paddle_price_id_monthly: plan.paddle_price_id_monthly || '', paddle_price_id_yearly: plan.paddle_price_id_yearly || '', is_active: plan.is_active }); }} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition text-xs">
                           Edit
                         </button>
                       </div>

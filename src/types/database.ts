@@ -54,6 +54,8 @@ export interface SubscriptionPlan {
   features?: Record<string, any>;
   stripe_price_id_monthly?: string;
   stripe_price_id_yearly?: string;
+  paddle_price_id_monthly?: string;
+  paddle_price_id_yearly?: string;
   is_active: boolean;
   created_at: string;
 }
@@ -64,6 +66,8 @@ export interface UserSubscription {
   plan_id: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
+  paddle_customer_id?: string;
+  paddle_subscription_id?: string;
   status: SubscriptionStatus;
   current_period_start?: string;
   current_period_end?: string;
@@ -79,6 +83,7 @@ export interface Transaction {
   user_subscription_id?: string;
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;
+  paddle_transaction_id?: string;
   amount?: number;
   currency: string;
   status: TransactionStatus;

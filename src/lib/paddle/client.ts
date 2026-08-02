@@ -2,22 +2,32 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 
+export interface PaddleCheckoutConfig {
+  items: { priceId: string; quantity: number }[];
+  customer?: { email?: string };
+  customData?: Record<string, any>;
+  successCallback?: (data: any) => void;
+  closeCallback?: () => void;
+}
+
+export interface PaddleGlobal {
+  Initialize: (config: {
+    token?: string;
+    environment?: string;
+    eventCallback: (event: any) => void;
+  }) => void;
+  Checkout: {
+    open: (config: PaddleCheckoutConfig) => void;
+  };
+}
+
 declare global {
   interface Window {
-    Paddle?: {
-      Initialize: (config: { eventCallback: (event: any) => void }) => void;
-      Checkout: {
-        open: (config: {
-          items: { priceId: string; quantity: number }[];
-          customer?: { email?: string };
-          customData?: Record<string, any>;
-          successCallback?: (data: any) => void;
-          closeCallback?: () => void;
-        }) => void;
-      };
-    };
+    Paddle?: PaddleGlobal;
   }
 }
+
+export type { PaddleGlobal as PaddleWindow };
 
 export function usePaddle() {
   const initialized = useRef(false);
@@ -35,6 +45,8 @@ export function usePaddle() {
     script.onload = () => {
       if (window.Paddle) {
         window.Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+          environment: process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox',
           eventCallback: (event) => {
             console.log('Paddle event:', event);
           },

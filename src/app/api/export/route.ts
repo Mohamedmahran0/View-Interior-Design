@@ -35,7 +35,57 @@ export async function POST(request: Request) {
     if (supabaseServiceKey) {
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
-      const folderPath = authorId ? `${authorId}/${filename}` : `anonymous/${filename}`;
+      if (!authorId) {
+        return NextResponse.json({ error: 'authorId is required' }, { status: 400 });
+      }
+
+      // ---- Check plan & credits for this user ----
+      const { data: profile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, subscription_tier, credits_remaining, credits_used')
+        .eq('id', authorId)
+        .maybeSingle();
+
+      if (profileErr || !profile) {
+        return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+      }
+
+      if (profile.subscription_tier !== 'free' && profile.credits_remaining <= 0) {
+        return NextResponse.json(
+          { error: 'Insufficient credits. Please upgrade your plan or wait for monthly reset.' },
+          { status: 402 }
+        );
+      }
+
+      if (profile.subscription_tier === 'free' && profile.credits_remaining <= 0) {
+        return NextResponse.json(
+          { error: 'No credits remaining on the free plan. Upgrade to continue exporting.' },
+          { status: 402 }
+        );
+      }
+
+      // ---- Check max projects limit ----
+      const { data: plan } = await serviceClient
+        .from('subscription_plans')
+        .select('max_projects')
+        .ilike('name', profile.subscription_tier)
+        .maybeSingle();
+
+      if (plan?.max_projects && plan.max_projects < 999999) {
+        const { count } = await serviceClient
+          .from('projects')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', authorId);
+        if (count != null && count >= plan.max_projects) {
+          return NextResponse.json(
+            { error: 'Project limit reached for your plan. Upgrade to add more projects.' },
+            { status: 402 }
+          );
+        }
+      }
+
+      // ---- Upload file ----
+      const folderPath = `${authorId}/${filename}`;
 
       const { error: uploadError } = await serviceClient.storage
         .from('projects')
@@ -55,14 +105,31 @@ export async function POST(request: Request) {
 
       const modelUrl = urlData?.publicUrl || '';
 
-      if (authorId) {
-        await serviceClient.from('projects').insert({
-          user_id: authorId,
-          name: projectName,
-          model_url: modelUrl,
-          status: 'ready',
-          is_public: false,
-        });
+      const { error: insertErr } = await serviceClient.from('projects').insert({
+        user_id: authorId,
+        name: projectName,
+        model_url: modelUrl,
+        status: 'ready',
+        is_public: false,
+      });
+
+      if (insertErr) {
+        console.error('Project insert error:', insertErr);
+        return NextResponse.json({ error: 'Failed to save project', details: insertErr.message }, { status: 500 });
+      }
+
+      // ---- Deduct one credit ----
+      const { error: creditErr } = await serviceClient
+        .from('profiles')
+        .update({
+          credits_remaining: profile.credits_remaining - 1,
+          credits_used: profile.credits_used + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', authorId);
+
+      if (creditErr) {
+        console.error('Credit deduction error:', creditErr);
       }
 
       const viewerUrl = `${new URL(supabaseUrl).origin}/en/viewer?url=${encodeURIComponent(modelUrl)}`;
@@ -72,6 +139,7 @@ export async function POST(request: Request) {
         message: 'Project uploaded to Supabase Storage!',
         viewerUrl: viewerUrl,
         project: { name: projectName, filename: filename },
+        credits_remaining: profile.credits_remaining - 1,
       });
     }
 

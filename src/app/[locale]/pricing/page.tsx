@@ -1,8 +1,12 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { CheckCircle2, Sparkles, ArrowRight, HelpCircle } from 'lucide-react';
+import { getPlans } from '@/lib/plans';
+import type { PlanWithFallback } from '@/lib/plans';
 
 const plans = ['free', 'basic', 'pro', 'enterprise'] as const;
+
+type PlanKey = (typeof plans)[number];
 
 const features = [
   { key: 'projects' as const, scope: true },
@@ -16,11 +20,18 @@ const features = [
   { key: 'support' as const, scope: false },
 ] as const;
 
+function formatPrice(plan: PlanWithFallback): string {
+  if (plan.price_monthly === 0) return '$0';
+  if (Number.isInteger(plan.price_monthly)) return `$${plan.price_monthly}`;
+  return `$${plan.price_monthly.toFixed(2)}`;
+}
+
 export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('Pricing');
   const isRtl = locale === 'ar';
+  const dbPlans = await getPlans();
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white selection:bg-emerald-500/30 overflow-x-hidden">
@@ -56,9 +67,10 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
           {plans.map((plan) => {
             const isPro = plan === 'pro';
             const isEnterprise = plan === 'enterprise';
-            const priceKey = `${plan}Price` as const;
-            const descKey = `${plan}Desc` as const;
             const planKey = `${plan}Plan` as const;
+            const descKey = `${plan}Desc` as const;
+            const dbPlan = dbPlans[plan as PlanKey];
+            const displayPrice = dbPlan ? formatPrice(dbPlan) : String(t(`${plan}Price` as const));
 
             return (
               <div
@@ -83,7 +95,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
 
                 <div className="mb-8">
                   <span className={`text-5xl font-bold ${isPro ? 'text-emerald-400' : isEnterprise ? 'text-blue-400' : 'text-white'}`}>
-                    {t(priceKey)}
+                    {displayPrice}
                   </span>
                   {!isFree(plan) && <span className="text-lg text-white/30 ml-1">{t('perMonth')}</span>}
                 </div>
