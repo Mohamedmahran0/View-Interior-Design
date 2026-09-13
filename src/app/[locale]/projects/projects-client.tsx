@@ -2,7 +2,7 @@
 
 import { useProjects } from '@/hooks/use-projects';
 import { Link } from '@/i18n/routing';
-import { Plus, MoreHorizontal, Edit3, Eye, Trash2, Share2, Globe, Lock, Clock, FileImage, FolderOpen, AlertCircle, X } from 'lucide-react';
+import { Plus, UploadCloud, MoreHorizontal, Edit3, Eye, Trash2, Share2, Globe, Lock, Clock, FileImage, FolderOpen, AlertCircle, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { Project } from '@/types/database';
 
@@ -116,13 +116,22 @@ export default function ProjectsClient() {
           <h1 className="text-3xl font-bold tracking-tight">All Projects</h1>
           <p className="text-white/50 mt-1">{filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}</p>
         </div>
-        <Link
-          href="/editor/new"
-          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] shrink-0"
-        >
-          <Plus size={18} />
-          New Project
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/projects/upload"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-semibold transition"
+          >
+            <UploadCloud size={18} />
+            Upload
+          </Link>
+          <Link
+            href="/editor/new"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+          >
+            <Plus size={18} />
+            New Project
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 mb-8 flex-wrap">
@@ -150,15 +159,24 @@ export default function ProjectsClient() {
           <p className="text-white/50 mb-6 max-w-md mx-auto">
             {filter !== 'all'
               ? `You don't have any ${filter} projects yet.`
-              : 'Get started by creating your first design project.'}
+              : 'Get started by uploading a 3D project or creating your first design.'}
           </p>
-          <Link
-            href="/editor/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition"
-          >
-            <Plus size={18} />
-            Create New Project
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/projects/upload"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-semibold transition"
+            >
+              <UploadCloud size={18} />
+              Upload Project
+            </Link>
+            <Link
+              href="/editor/new"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition"
+            >
+              <Plus size={18} />
+              Create in Editor
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

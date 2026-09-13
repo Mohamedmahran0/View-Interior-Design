@@ -2,8 +2,10 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
-import { Eye, Share2, Calendar, Tag, ArrowLeft, Monitor, Copy, Check } from 'lucide-react';
+import { Eye, Calendar, Tag, ArrowLeft, Monitor } from 'lucide-react';
 import ShareButton from './share-button';
+import GLBViewer from '@/components/Viewer/GLBViewer';
+import SplatViewer from '@/components/Viewer/SplatViewer';
 
 export default async function ProjectViewPage({
   params,
@@ -32,6 +34,9 @@ export default async function ProjectViewPage({
     .update({ view_count: viewCount })
     .eq('id', projectId);
 
+  const fileUrl = project.model_url || project.glb_url || '';
+  const isGLB = fileUrl.toLowerCase().endsWith('.glb') || fileUrl.toLowerCase().endsWith('.gltf');
+
   return (
     <main className="min-h-screen bg-neutral-950 text-white selection:bg-emerald-500/30">
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -59,12 +64,9 @@ export default async function ProjectViewPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="aspect-[16/9] rounded-[2rem] bg-gradient-to-br from-neutral-900 to-black border border-white/10 overflow-hidden relative group shadow-2xl">
-                {project.glb_url ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Monitor size={64} className="text-emerald-500/30 mx-auto mb-4" />
-                      <p className="text-white/40 text-sm">{t('viewerPlaceholder')}</p>
-                    </div>
+                {fileUrl ? (
+                  <div className="w-full h-full">
+                    {isGLB ? <GLBViewer url={fileUrl} /> : <SplatViewer url={fileUrl} />}
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

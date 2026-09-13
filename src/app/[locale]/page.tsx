@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { Download, MonitorPlay, ArrowRight, LayoutDashboard, Languages, Navigation, Sun, Cloud, Wand2, CheckCircle2 } from 'lucide-react';
 import Typewriter from '@/components/Typewriter';
+import AuthNav from '@/components/AuthNav';
 
 export default async function HomePage({
   params
@@ -38,6 +39,10 @@ export default async function HomePage({
           <a href="#platform" className="hover:text-emerald-400 transition hidden sm:block">{t('navPlatform')}</a>
           <a href="#plugin" className="hover:text-emerald-400 transition hidden sm:block">{t('navPlugin')}</a>
           <Link href="/editor" className="hover:text-emerald-400 transition hidden sm:block">{t('navEditor')}</Link>
+          
+          <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
+
+          <AuthNav />
           
           <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
           

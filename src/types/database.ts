@@ -24,11 +24,14 @@ export interface Project {
   name: string;
   description?: string;
   model_url?: string;
+  glb_url?: string;
   thumbnail_url?: string;
   scene_data: Record<string, any>;
   settings: Record<string, any>;
   status: ProjectStatus;
   is_public: boolean;
+  author_name?: string;
+  category?: string;
   view_count: number;
   last_modified: string;
   created_at: string;

@@ -90,7 +90,11 @@ function SignupFormInner() {
       setSuccess('Account created! Complete your subscription below.');
     } else {
       setSuccess(t('successAccountCreated'));
-      setTimeout(() => router.push('/login'), 2000);
+      if (data?.session) {
+        setTimeout(() => router.push('/projects'), 1500);
+      } else {
+        setTimeout(() => router.push('/login'), 2000);
+      }
     }
   };
 

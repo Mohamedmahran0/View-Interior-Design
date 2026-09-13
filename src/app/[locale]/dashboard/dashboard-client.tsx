@@ -4,7 +4,7 @@ import { useSupabase } from '@/providers/supabase-provider';
 import { useProjects } from '@/hooks/use-projects';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Link } from '@/i18n/routing';
-import { Plus, CreditCard, FolderOpen, HardDrive, Sparkles, Clock, ExternalLink, ArrowRight, Package, Globe, Lock, FileImage } from 'lucide-react';
+import { Plus, UploadCloud, CreditCard, FolderOpen, HardDrive, Sparkles, Clock, ExternalLink, ArrowRight, Package, Globe, Lock, FileImage } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Project, Profile } from '@/types/database';
 
@@ -102,6 +102,13 @@ export default function DashboardClient() {
         </div>
         <div className="flex items-center gap-3">
           <Link
+            href="/projects/upload"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-semibold transition"
+          >
+            <UploadCloud size={18} />
+            Upload
+          </Link>
+          <Link
             href="/editor/new"
             className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
           >
@@ -172,15 +179,24 @@ export default function DashboardClient() {
           </div>
           <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
           <p className="text-white/50 mb-6 max-w-md mx-auto">
-            Create your first project to start designing and showcasing your work.
+            Upload a 3D model from the 3ds Max plugin or create your first design to showcase your work.
           </p>
-          <Link
-            href="/editor/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition"
-          >
-            <Plus size={18} />
-            Create Your First Project
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/projects/upload"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-semibold transition"
+            >
+              <UploadCloud size={18} />
+              Upload Project
+            </Link>
+            <Link
+              href="/editor/new"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold transition"
+            >
+              <Plus size={18} />
+              Create Your First Project
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-3 mb-10">

@@ -6,6 +6,12 @@
 -- real Paddle price IDs (from Paddle Billing -> Catalog -> Prices).
 -- ============================================================
 
+-- Ensure new projects columns exist (idempotent for existing databases)
+ALTER TABLE public.projects
+    ADD COLUMN IF NOT EXISTS author_name TEXT,
+    ADD COLUMN IF NOT EXISTS category TEXT,
+    ADD COLUMN IF NOT EXISTS glb_url TEXT;
+
 -- Ensure new Paddle columns exist (idempotent for existing databases)
 ALTER TABLE public.subscription_plans
     ADD COLUMN IF NOT EXISTS paddle_price_id_monthly TEXT,

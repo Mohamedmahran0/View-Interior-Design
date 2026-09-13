@@ -30,11 +30,14 @@ CREATE TABLE public.projects (
     name TEXT NOT NULL,
     description TEXT,
     model_url TEXT,
+    glb_url TEXT,
     thumbnail_url TEXT,
     scene_data JSONB DEFAULT '{}',
     settings JSONB DEFAULT '{"movementSpeed": 2, "lookSpeed": 0.1}',
     status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'processing', 'ready', 'archived')),
     is_public BOOLEAN DEFAULT FALSE,
+    author_name TEXT,
+    category TEXT,
     view_count INTEGER DEFAULT 0,
     last_modified TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -241,6 +244,28 @@ ON storage.objects FOR SELECT USING (
     bucket_id = 'projects' AND
     ((storage.foldername(name))[1] = auth.uid()::text OR
      EXISTS (SELECT 1 FROM public.projects WHERE model_url LIKE '%' || name))
+);
+
+CREATE POLICY "Users can upload own thumbnails"
+ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'thumbnails' AND
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Anyone can read thumbnails"
+ON storage.objects FOR SELECT USING (
+    bucket_id = 'thumbnails'
+);
+
+CREATE POLICY "Users can upload own avatar"
+ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' AND
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Anyone can read avatars"
+ON storage.objects FOR SELECT USING (
+    bucket_id = 'avatars'
 );
 
 -- 9. ENABLE REALTIME
