@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
+const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET || 'placeholder-paddle-secret';
 
 const PLAN_IDS: Record<string, string> = {
   free: '00000000-0000-0000-0000-000000000001',

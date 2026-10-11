@@ -217,7 +217,7 @@ export default function DashboardClient() {
                 <p className="font-semibold truncate">{project.name}</p>
                 <p className="text-sm text-white/50 flex items-center gap-2 mt-0.5">
                   <Clock size={12} />
-                  {new Date(project.last_modified).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {new Date(project.last_modified || project.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
               <div className="flex items-center gap-3">

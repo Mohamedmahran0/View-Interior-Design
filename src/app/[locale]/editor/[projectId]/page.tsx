@@ -24,13 +24,12 @@ export default async function EditProjectPage({
     notFound();
   }
 
+  const modelUrl = project.glb_url || project.model_url || undefined;
+
   return (
     <main className="relative w-full h-screen overflow-hidden bg-slate-950">
-      <div className="absolute top-3 left-3 z-20 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-lg text-sm font-medium text-white/80">
-        {project.name}
-      </div>
-      <Scene3D />
-      <EditorUI />
+      <Scene3D modelUrl={modelUrl} projectId={projectId} />
+      <EditorUI projectId={projectId} projectName={project.name} />
     </main>
   );
 }

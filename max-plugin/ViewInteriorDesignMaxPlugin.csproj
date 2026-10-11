@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ViewInteriorDesign.MaxPlugin</RootNamespace>
+    <AssemblyName>ViewInteriorDesignMaxPlugin</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Note: When compiling on a workstation with 3ds Max installed, 
+       ensure Autodesk.Max.dll from the 3ds Max root directory is referenced:
+  <ItemGroup>
+    <Reference Include="Autodesk.Max">
+      <HintPath>C:\Program Files\Autodesk\3ds Max 2024\Autodesk.Max.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  -->
+</Project>

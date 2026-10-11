@@ -199,7 +199,7 @@ export default function ProjectsClient() {
                     </Link>
                     <p className="text-xs text-white/40 flex items-center gap-1.5 mt-1">
                       <Clock size={11} />
-                      {new Date(project.last_modified).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(project.last_modified || project.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
                   <div className="relative" ref={menuRef}>

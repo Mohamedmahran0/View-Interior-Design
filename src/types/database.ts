@@ -5,11 +5,14 @@ export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplet
 export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 export type AdminRole = 'super_admin' | 'admin' | 'support' | 'viewer';
 
+export type UserRole = 'engineer' | 'admin' | 'viewer';
+
 export interface Profile {
   id: string;
   email: string;
   full_name?: string;
   avatar_url?: string;
+  role?: UserRole;
   subscription_tier: SubscriptionTier;
   credits_remaining: number;
   credits_used: number;
@@ -21,20 +24,25 @@ export interface Profile {
 export interface Project {
   id: string;
   user_id: string;
+  owner_id?: string;
   name: string;
   description?: string;
   model_url?: string;
   glb_url?: string;
+  glb_storage_path?: string;
   thumbnail_url?: string;
-  scene_data: Record<string, any>;
-  settings: Record<string, any>;
+  scene_data?: Record<string, any>;
+  scene_metadata?: Record<string, any>;
+  settings?: Record<string, any>;
   status: ProjectStatus;
   is_public: boolean;
+  share_token?: string;
   author_name?: string;
   category?: string;
   view_count: number;
-  last_modified: string;
+  last_modified?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ProjectHistory {

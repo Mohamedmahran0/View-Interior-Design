@@ -2,8 +2,8 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 
 const ALLOWED_MODEL_EXTENSIONS = ['glb', 'gltf', 'ply'];
 const ALLOWED_IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'avif'];
@@ -27,15 +27,32 @@ function getContentType(ext: string): string {
 
 export async function POST(request: Request) {
   try {
-    // ---- Authentication from session cookie ----
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // ---- Authentication from session cookie or Authorization Bearer header (3ds Max Plugin) ----
+    let user: any = null;
+    const authHeader = request.headers.get('authorization');
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'You must be signed in to upload a project.' }, { status: 401 });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      const serviceClient = createServiceClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+      const { data: tokenData, error: tokenErr } = await serviceClient.auth.getUser(token);
+      if (!tokenErr && tokenData?.user) {
+        user = tokenData.user;
+      }
+    }
+
+    if (!user) {
+      const supabase = await createClient();
+      const {
+        data: { user: cookieUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (!authError && cookieUser) {
+        user = cookieUser;
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in or provide a valid Bearer token to upload a project.' }, { status: 401 });
     }
 
     // ---- Parse multipart form ----
@@ -176,10 +193,12 @@ export async function POST(request: Request) {
       .from('projects')
       .insert({
         user_id: user.id,
+        owner_id: user.id,
         name: projectName,
         description: description || null,
         category: category || null,
         author_name: profile.full_name || null,
+        glb_storage_path: modelPath,
         model_url: modelUrl,
         glb_url: modelExt === 'glb' || modelExt === 'gltf' ? modelUrl : null,
         thumbnail_url: thumbnailUrl,

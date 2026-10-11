@@ -5,9 +5,10 @@
 -- 1. PROFILES TABLE
 CREATE TABLE public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
     full_name TEXT,
     avatar_url TEXT,
+    role TEXT DEFAULT 'engineer' CHECK (role IN ('engineer', 'admin', 'viewer')),
     subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'basic', 'pro', 'enterprise')),
     credits_remaining INTEGER DEFAULT 5,
     credits_used INTEGER DEFAULT 0,
@@ -26,22 +27,45 @@ CREATE POLICY "Users can update own profile" ON public.profiles
 -- 2. PROJECTS TABLE
 CREATE TABLE public.projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
     model_url TEXT,
     glb_url TEXT,
+    glb_storage_path TEXT, -- Storage path: {user_id}/{project_id}/scene.glb
     thumbnail_url TEXT,
     scene_data JSONB DEFAULT '{}',
+    scene_metadata JSONB DEFAULT '{}', -- Scene metadata (camera, lights, materials overrides)
     settings JSONB DEFAULT '{"movementSpeed": 2, "lookSpeed": 0.1}',
     status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'processing', 'ready', 'archived')),
     is_public BOOLEAN DEFAULT FALSE,
+    share_token TEXT UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
     author_name TEXT,
     category TEXT,
     view_count INTEGER DEFAULT 0,
     last_modified TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Trigger to sync owner_id and user_id
+CREATE OR REPLACE FUNCTION public.sync_project_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.owner_id IS NULL AND NEW.user_id IS NOT NULL THEN
+        NEW.owner_id := NEW.user_id;
+    ELSIF NEW.user_id IS NULL AND NEW.owner_id IS NOT NULL THEN
+        NEW.user_id := NEW.owner_id;
+    END IF;
+    NEW.updated_at := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_sync_project_owner
+    BEFORE INSERT OR UPDATE ON public.projects
+    FOR EACH ROW EXECUTE FUNCTION public.sync_project_owner();
 
 CREATE TABLE public.project_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,13 +77,29 @@ CREATE TABLE public.project_history (
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_history ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own projects" ON public.projects
-    FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Anyone can view public projects" ON public.projects
-    FOR SELECT USING (is_public = TRUE);
+-- RLS: Engineer views own projects
+CREATE POLICY "engineer_view_own_projects" ON public.projects
+    FOR SELECT USING (auth.uid() = owner_id OR auth.uid() = user_id);
+
+-- RLS: Engineer inserts own projects
+CREATE POLICY "engineer_insert_own_projects" ON public.projects
+    FOR INSERT WITH CHECK (auth.uid() = owner_id OR auth.uid() = user_id);
+
+-- RLS: Engineer updates own projects
+CREATE POLICY "engineer_update_own_projects" ON public.projects
+    FOR UPDATE USING (auth.uid() = owner_id OR auth.uid() = user_id);
+
+-- RLS: Engineer deletes own projects
+CREATE POLICY "engineer_delete_own_projects" ON public.projects
+    FOR DELETE USING (auth.uid() = owner_id OR auth.uid() = user_id);
+
+-- RLS: Public access via share token or public status
+CREATE POLICY "public_access_via_token" ON public.projects
+    FOR SELECT USING (is_public = TRUE OR share_token IS NOT NULL);
+
 CREATE POLICY "Users can CRUD own project history" ON public.project_history
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid())
+        EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND (user_id = auth.uid() OR owner_id = auth.uid()))
     );
 
 -- 3. SUBSCRIPTION PLANS TABLE
@@ -232,7 +272,31 @@ CREATE POLICY "Admins can view all transactions" ON public.transactions
     FOR SELECT USING (public.is_admin(auth.uid()));
 
 -- 8. STORAGE POLICIES
--- Buckets: projects, assets, avatars, thumbnails
+-- Storage bucket: models ({user_id}/{project_id}/scene.glb)
+CREATE POLICY "Users can upload to models bucket"
+ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'models' AND
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can update in models bucket"
+ON storage.objects FOR UPDATE USING (
+    bucket_id = 'models' AND
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can read own models or public projects"
+ON storage.objects FOR SELECT USING (
+    bucket_id = 'models' AND
+    ((storage.foldername(name))[1] = auth.uid()::text OR
+     EXISTS (
+        SELECT 1 FROM public.projects 
+        WHERE (is_public = TRUE OR share_token IS NOT NULL) 
+        AND (glb_storage_path = name OR model_url LIKE '%' || name)
+     ))
+);
+
+-- Legacy/compatibility bucket: projects
 CREATE POLICY "Users can upload to own project folder"
 ON storage.objects FOR INSERT WITH CHECK (
     bucket_id = 'projects' AND
