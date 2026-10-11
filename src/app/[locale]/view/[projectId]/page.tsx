@@ -1,10 +1,6 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/routing';
+import { setRequestLocale } from 'next-intl/server';
 import { createClient } from '@/utils/supabase/server';
-import { notFound } from 'next/navigation';
-import { Eye, Calendar, Tag, ArrowLeft, Monitor } from 'lucide-react';
-import ShareButton from './share-button';
-import ProjectViewerContainer from './project-viewer-container';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function ProjectViewPage({
   params,
@@ -13,8 +9,6 @@ export default async function ProjectViewPage({
 }) {
   const { locale, projectId } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations('ProjectView');
-  const isRtl = locale === 'ar';
 
   const supabase = await createClient();
   const { data: project } = await supabase
@@ -27,105 +21,21 @@ export default async function ProjectViewPage({
     notFound();
   }
 
-  const viewCount = (project.view_count || 0) + 1;
-  await supabase
-    .from('projects')
-    .update({ view_count: viewCount })
-    .eq('id', projectId);
+  const ownerId = project.owner_id || project.user_id;
+  let username = project.author_name || 'engineer';
+  if (ownerId) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', ownerId)
+      .single();
+    if (profile?.full_name) {
+      username = profile.full_name;
+    } else if (profile?.email) {
+      username = profile.email.split('@')[0];
+    }
+  }
 
-  const fileUrl = project.model_url || project.glb_url || '';
-  const isGLB = fileUrl.toLowerCase().endsWith('.glb') || fileUrl.toLowerCase().endsWith('.gltf');
-
-  return (
-    <main className="min-h-screen bg-neutral-950 text-white selection:bg-emerald-500/30">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/20 blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px]"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-      </div>
-
-      <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12 backdrop-blur-xl border-b border-white/5 bg-black/40">
-        <div className="flex items-center gap-4">
-          <Link href="/gallery" className="flex items-center gap-2 text-sm text-white/60 hover:text-emerald-400 transition">
-            <ArrowLeft size={18} className={isRtl ? 'rotate-180' : ''} />
-            {t('backToGallery')}
-          </Link>
-        </div>
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center font-bold text-lg shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-            V
-          </div>
-        </Link>
-      </nav>
-
-      <section className="relative z-10 py-12 px-4 lg:px-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <ProjectViewerContainer
-                projectId={projectId}
-                projectName={project.name || 'Untitled Project'}
-                fileUrl={fileUrl}
-                isGLB={isGLB}
-                streamingEnabled={project.streaming_enabled ?? true}
-              />
-              <div className="mt-4 flex items-center justify-between px-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-xs text-white/60 border border-white/10">
-                  <Eye size={14} />
-                  {viewCount} {t('viewCount')}
-                </div>
-                <ShareButton projectId={projectId} />
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-[2rem] p-6">
-                <h1 className="text-3xl font-bold mb-2">{project.name || 'Untitled Project'}</h1>
-                {project.author_name && (
-                  <p className="text-white/50 text-sm flex items-center gap-2">
-                    {t('by')} <span className="text-white/70">{project.author_name}</span>
-                  </p>
-                )}
-
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-white/50">
-                    <Tag size={16} className="text-white/30" />
-                    <span>{t('category')}:</span>
-                    <span className="text-white/70 capitalize">{project.category || 'Uncategorized'}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-white/50">
-                    <Calendar size={16} className="text-white/30" />
-                    <span>{t('created')}:</span>
-                    <span className="text-white/70">
-                      {project.created_at
-                        ? new Date(project.created_at).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : 'N/A'}
-                    </span>
-                  </div>
-                </div>
-
-                {project.description && (
-                  <p className="mt-6 text-white/60 text-sm leading-relaxed border-t border-white/10 pt-6">
-                    {project.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <ShareButton projectId={projectId} variant="full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="relative z-10 py-12 text-center text-white/40 border-t border-white/5 bg-black/80 text-sm backdrop-blur-md">
-        <p>© 2026 View Interior Design. All rights reserved.</p>
-      </footer>
-    </main>
-  );
+  const cleanUser = username.trim().replace(/\s+/g, '-').replace(/[^\p{L}\p{N}_-]/gu, '') || 'engineer';
+  redirect(`/${locale}/view/${encodeURIComponent(cleanUser)}/${projectId}`);
 }

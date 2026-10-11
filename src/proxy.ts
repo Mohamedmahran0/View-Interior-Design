@@ -10,6 +10,19 @@ const protectedRoutes = ['/dashboard', '/projects', '/account'];
 const adminRoutes = ['/admin/dashboard', '/admin/users', '/admin/subscriptions', '/admin/transactions', '/admin/projects', '/admin/assets', '/admin/settings'];
 
 export async function proxy(request: NextRequest) {
+  const host = request.headers.get('host') || '';
+
+  // 1. Canonical Domain Enforcement: Redirect any *.vercel.app URLs to www.viewinteriordesign.com
+  if (host.includes('.vercel.app') && !host.includes('localhost')) {
+    const canonicalDomain = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.viewinteriordesign.com';
+    const cleanCanonical = canonicalDomain.startsWith('http') ? canonicalDomain : `https://${canonicalDomain}`;
+    const redirectTarget = new URL(
+      request.nextUrl.pathname + request.nextUrl.search,
+      cleanCanonical
+    );
+    return NextResponse.redirect(redirectTarget, 308);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   try {

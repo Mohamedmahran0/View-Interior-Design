@@ -5,6 +5,7 @@ import { Link, useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Eye, EyeOff, UserPlus, Mail, Lock, User, CreditCard, Sparkles, CheckCircle2 } from 'lucide-react';
+import { getCanonicalSiteUrl } from '@/utils/site-url';
 
 const PLAN_PRICE_MAP: Record<string, string> = {
   basic: process.env.NEXT_PUBLIC_PADDLE_PRICE_BASIC_MONTHLY || '',
@@ -41,7 +42,7 @@ function SignupFormInner() {
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     setError('');
-    const origin = window.location.origin;
+    const origin = getCanonicalSiteUrl();
     const target = redirectParam || (selectedPlan ? `/account/billing?plan=${selectedPlan}` : '/projects');
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',

@@ -129,7 +129,7 @@ export default function GalleryPage() {
               {filteredProjects.map((project) => (
                 <Link
                   key={project.id}
-                  href={`/view/${project.id}`}
+                  href={`/view/${encodeURIComponent(project.author_name || 'engineer')}/${project.id}`}
                   className="group rounded-2xl bg-white/5 border border-white/10 overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                 >
                   <div className="aspect-[4/3] bg-gradient-to-br from-neutral-800 to-neutral-900 relative overflow-hidden">

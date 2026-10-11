@@ -20,10 +20,17 @@ export async function GET(request: Request) {
         targetPath = '/' + targetPath;
       }
 
-      return NextResponse.redirect(new URL(targetPath, requestUrl.origin));
+      const canonicalDomain = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.viewinteriordesign.com';
+      const isLocal = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
+      const baseOrigin = isLocal ? requestUrl.origin : (canonicalDomain.startsWith('http') ? canonicalDomain : `https://${canonicalDomain}`);
+
+      return NextResponse.redirect(new URL(targetPath, baseOrigin));
     }
   }
 
   // If error occurred during exchange, redirect to login
-  return NextResponse.redirect(new URL('/login?error=oauth_error', requestUrl.origin));
+  const canonicalDomain = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.viewinteriordesign.com';
+  const isLocal = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
+  const baseOrigin = isLocal ? requestUrl.origin : (canonicalDomain.startsWith('http') ? canonicalDomain : `https://${canonicalDomain}`);
+  return NextResponse.redirect(new URL('/login?error=oauth_error', baseOrigin));
 }

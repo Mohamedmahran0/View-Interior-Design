@@ -12,6 +12,7 @@ interface ProjectViewerContainerProps {
   fileUrl: string;
   isGLB: boolean;
   streamingEnabled?: boolean;
+  sceneMetadata?: Record<string, any>;
 }
 
 export default function ProjectViewerContainer({
@@ -20,6 +21,7 @@ export default function ProjectViewerContainer({
   fileUrl,
   isGLB,
   streamingEnabled = true,
+  sceneMetadata,
 }: ProjectViewerContainerProps) {
   const [viewMode, setViewMode] = useState<'stream' | 'web'>(streamingEnabled ? 'stream' : 'web');
 
@@ -62,17 +64,14 @@ export default function ProjectViewerContainer({
       <div className="w-full h-full min-h-[560px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative">
         {viewMode === 'stream' ? (
           <PixelStreamPlayer projectId={projectId} projectName={projectName} />
-        ) : fileUrl ? (
-          isGLB ? (
-            <ProfessionalViewer url={fileUrl} projectName={projectName} />
-          ) : (
-            <SplatViewer url={fileUrl} />
-          )
+        ) : fileUrl && !isGLB ? (
+          <SplatViewer url={fileUrl} />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-950 text-white/40">
-            <Monitor size={48} className="mb-2 opacity-30" />
-            <p className="text-xs">No 3D asset attached to this project.</p>
-          </div>
+          <ProfessionalViewer
+            url={fileUrl || undefined}
+            projectName={projectName}
+            sceneMetadata={sceneMetadata}
+          />
         )}
       </div>
     </div>

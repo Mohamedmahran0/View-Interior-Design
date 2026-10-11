@@ -5,6 +5,7 @@ import { Link, useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
+import { getCanonicalSiteUrl } from '@/utils/site-url';
 
 function LoginFormInner() {
   const t = useTranslations('Auth');
@@ -29,7 +30,7 @@ function LoginFormInner() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError('');
-    const origin = window.location.origin;
+    const origin = getCanonicalSiteUrl();
     const target = redirectParam || '/dashboard';
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',

@@ -1,21 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Share2, Check } from 'lucide-react';
+import { getProjectShareUrl } from '@/utils/site-url';
 
 export default function ShareButton({
   projectId,
+  username,
   variant = 'icon',
 }: {
   projectId: string;
+  username?: string | null;
   variant?: 'icon' | 'full';
 }) {
   const t = useTranslations('ProjectView');
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/view/${projectId}`;
+    const url = getProjectShareUrl(username, projectId, locale);
     try {
       await navigator.clipboard.writeText(url);
     } catch {

@@ -2,8 +2,10 @@
 
 import { useProjects } from '@/hooks/use-projects';
 import { Link } from '@/i18n/routing';
-import { Plus, UploadCloud, MoreHorizontal, Edit3, Eye, Trash2, Share2, Globe, Lock, Clock, FileImage, FolderOpen, AlertCircle, X } from 'lucide-react';
+import { Plus, UploadCloud, MoreHorizontal, Edit3, Eye, Trash2, Share2, Globe, Lock, Clock, FileImage, FolderOpen, AlertCircle, X, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useLocale } from 'next-intl';
+import { getProjectShareUrl } from '@/utils/site-url';
 import type { Project } from '@/types/database';
 
 function StatusBadge({ status }: { status: Project['status'] }) {
@@ -38,11 +40,13 @@ function SkeletonCard() {
 }
 
 export default function ProjectsClient() {
+  const locale = useLocale();
   const { projects, loading, error, isSchemaMissing, deleteProject } = useProjects();
   const [filter, setFilter] = useState<Project['status'] | 'all'>('all');
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -255,17 +259,44 @@ export default function ProjectsClient() {
                           <Edit3 size={14} /> Edit
                         </Link>
                         <Link
-                          href={`/viewer?url=${encodeURIComponent(project.model_url || '')}`}
+                          href={`/view/${encodeURIComponent(project.author_name || 'engineer')}/${project.id}`}
                           onClick={() => setOpenMenuId(null)}
                           className="flex items-center gap-2.5 px-4 py-2 text-sm text-white/80 hover:bg-white/10 transition"
                         >
-                          <Eye size={14} /> Preview
+                          <Eye size={14} /> Preview (Walkthrough)
                         </Link>
                         <button
-                          onClick={() => { setOpenMenuId(null); navigator.clipboard.writeText(`${window.location.origin}/viewer?url=${project.model_url || ''}`); }}
+                          onClick={async () => {
+                            const url = getProjectShareUrl(project.author_name, project.id, locale);
+                            try {
+                              await navigator.clipboard.writeText(url);
+                            } catch {
+                              const textarea = document.createElement('textarea');
+                              textarea.value = url;
+                              document.body.appendChild(textarea);
+                              textarea.select();
+                              document.execCommand('copy');
+                              document.body.removeChild(textarea);
+                            }
+                            setCopiedId(project.id);
+                            setTimeout(() => {
+                              setCopiedId(null);
+                              setOpenMenuId(null);
+                            }, 1500);
+                          }}
                           className="flex items-center gap-2.5 px-4 py-2 text-sm text-white/80 hover:bg-white/10 transition w-full text-left"
                         >
-                          <Share2 size={14} /> Share
+                          {copiedId === project.id ? (
+                            <>
+                              <Check size={14} className="text-emerald-400" />
+                              <span className="text-emerald-400">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 size={14} />
+                              <span>Share Link</span>
+                            </>
+                          )}
                         </button>
                         <div className="border-t border-white/10 my-1"></div>
                         <button

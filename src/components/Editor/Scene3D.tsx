@@ -84,7 +84,7 @@ function LoadedModel({ url, onSelect }: { url: string; onSelect: (obj: THREE.Obj
 }
 
 // Realistic Parametric 3D Furniture Items
-function FurnitureMesh({ item }: { item: PlacedItem }) {
+export function FurnitureMesh({ item }: { item: PlacedItem }) {
   const color = item.material?.color || '#3b82f6';
   const roughness = item.material?.roughness ?? 0.5;
   const metalness = item.material?.metalness ?? 0.1;

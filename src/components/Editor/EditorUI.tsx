@@ -34,6 +34,7 @@ import { Link } from '@/i18n/routing';
 import { useEditorStore, HdrPreset, FurnitureType } from '@/store/editorStore';
 import { GLTFExporter } from 'three-stdlib';
 import { createClient } from '@/utils/supabase/client';
+import { getCanonicalSiteUrl, getProjectShareUrl } from '@/utils/site-url';
 
 interface EditorUIProps {
   projectId?: string;
@@ -155,7 +156,7 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
 
   const handleGoogleSignIn = async (plan: 'free' | 'pro' | 'studio' = 'free') => {
     setIsGoogleLoading(true);
-    const origin = window.location.origin;
+    const origin = getCanonicalSiteUrl();
     const redirectUrl = plan === 'free' ? '/editor' : `/pricing?plan=${plan}`;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -262,7 +263,9 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
   };
 
   const handleShareClick = () => {
-    const url = `${window.location.origin}/view/${projectId || ''}`;
+    const activeId = currentProjectId || projectId;
+    const authorName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'designer';
+    const url = activeId ? getProjectShareUrl(authorName, activeId) : `${getCanonicalSiteUrl()}/editor`;
     navigator.clipboard.writeText(url);
     setCopiedShare(true);
     setTimeout(() => setCopiedShare(false), 2000);
