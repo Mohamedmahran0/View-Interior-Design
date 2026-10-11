@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 
-const ALLOWED_MODEL_EXTENSIONS = ['glb', 'gltf', 'ply'];
+const ALLOWED_MODEL_EXTENSIONS = ['glb', 'gltf', 'ply', 'udatasmith', 'zip'];
 const ALLOWED_IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'avif'];
 const MAX_MODEL_SIZE = 200 * 1024 * 1024; // 200 MB
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -19,6 +19,8 @@ function getContentType(ext: string): string {
   if (ext === 'glb') return 'model/gltf-binary';
   if (ext === 'gltf') return 'model/gltf+json';
   if (ext === 'ply') return 'application/octet-stream';
+  if (ext === 'udatasmith') return 'application/octet-stream';
+  if (ext === 'zip') return 'application/zip';
   if (ext === 'webp') return 'image/webp';
   if (ext === 'avif') return 'image/avif';
   if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';

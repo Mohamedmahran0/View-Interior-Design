@@ -4,8 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import { Eye, Calendar, Tag, ArrowLeft, Monitor } from 'lucide-react';
 import ShareButton from './share-button';
-import ProfessionalViewer from '@/components/Viewer/ProfessionalViewer';
-import SplatViewer from '@/components/Viewer/SplatViewer';
+import ProjectViewerContainer from './project-viewer-container';
 
 export default async function ProjectViewPage({
   params,
@@ -63,24 +62,19 @@ export default async function ProjectViewPage({
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="aspect-[16/9] rounded-[2rem] bg-gradient-to-br from-neutral-900 to-black border border-white/10 overflow-hidden relative group shadow-2xl">
-                {fileUrl ? (
-                  <div className="w-full h-full">
-                    {isGLB ? <ProfessionalViewer url={fileUrl} projectName={project.name} /> : <SplatViewer url={fileUrl} />}
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Monitor size={64} className="text-white/10 mx-auto mb-4" />
-                    <p className="text-white/20">{t('viewerLoading')}</p>
-                  </div>
-                )}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-xs text-white/60 border border-white/10">
-                    <Eye size={14} />
-                    {viewCount} {t('viewCount')}
-                  </div>
-                  <ShareButton projectId={projectId} />
+              <ProjectViewerContainer
+                projectId={projectId}
+                projectName={project.name || 'Untitled Project'}
+                fileUrl={fileUrl}
+                isGLB={isGLB}
+                streamingEnabled={project.streaming_enabled ?? true}
+              />
+              <div className="mt-4 flex items-center justify-between px-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-xs text-white/60 border border-white/10">
+                  <Eye size={14} />
+                  {viewCount} {t('viewCount')}
                 </div>
+                <ShareButton projectId={projectId} />
               </div>
             </div>
 

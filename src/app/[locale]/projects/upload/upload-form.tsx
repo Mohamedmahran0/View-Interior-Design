@@ -28,7 +28,7 @@ const CATEGORIES = [
   { id: 'outdoor', label: 'Outdoor' },
 ];
 
-const MODEL_ACCEPT = '.glb,.gltf,.ply';
+const MODEL_ACCEPT = '.glb,.gltf,.ply,.udatasmith,.zip';
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/avif';
 
 export default function UploadForm() {
@@ -231,9 +231,9 @@ if (userLoading) {
                 <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                   <FileBox size={28} className="text-white/40" />
                 </div>
-                <p className="font-semibold">Drag & drop your model here</p>
+                <p className="font-semibold">Drag & drop your 3D model or Datasmith scene here</p>
                 <p className="text-sm text-white/50 mt-1">or click to browse</p>
-                <p className="text-xs text-white/30 mt-4">Supported formats: .glb, .gltf, .ply (up to 200 MB)</p>
+                <p className="text-xs text-white/30 mt-4">Supported formats: .glb, .gltf, .ply, .udatasmith (3ds Max Datasmith), .zip (up to 200 MB)</p>
               </div>
             )}
           </div>
