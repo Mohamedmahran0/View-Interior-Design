@@ -9,6 +9,7 @@ export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSchemaMissing, setIsSchemaMissing] = useState(false);
 
   const fetchProjects = useCallback(async () => {
     if (!user) {
@@ -17,18 +18,34 @@ export function useProjects() {
       return;
     }
 
-    const { data, error: fetchError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('last_modified', { ascending: false });
+    try {
+      // Query projects where user is owner or author
+      const { data, error: fetchError } = await supabase
+        .from('projects')
+        .select('*')
+        .or(`user_id.eq.${user.id},owner_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
 
-    if (fetchError) {
-      setError(fetchError.message);
-    } else {
-      setProjects(data as Project[]);
+      if (fetchError) {
+        const msg = fetchError.message || '';
+        if (
+          msg.toLowerCase().includes('schema cache') ||
+          msg.toLowerCase().includes('does not exist') ||
+          msg.toLowerCase().includes('find the table')
+        ) {
+          setIsSchemaMissing(true);
+        }
+        setError(msg);
+      } else {
+        setProjects(data as Project[]);
+        setError(null);
+        setIsSchemaMissing(false);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to fetch projects');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user, supabase]);
 
   useEffect(() => {
@@ -85,5 +102,5 @@ export function useProjects() {
     return true;
   };
 
-  return { projects, loading, error, createProject, updateProject, deleteProject, refetch: fetchProjects };
+  return { projects, loading, error, isSchemaMissing, createProject, updateProject, deleteProject, refetch: fetchProjects };
 }

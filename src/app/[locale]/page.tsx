@@ -204,9 +204,12 @@ export default async function HomePage({
                 <li className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500"/> Web Viewer</li>
                 <li className="flex items-center gap-3 text-white/30"><CheckCircle2 size={20} /> AI Generator</li>
               </ul>
-              <button className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold transition">
+              <Link
+                href="/signup?plan=basic"
+                className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold transition block text-center"
+              >
                 {t('subscribeBtn')}
-              </button>
+              </Link>
             </div>
             
             {/* Pro Plan */}
@@ -220,9 +223,12 @@ export default async function HomePage({
                 <li className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-400"/> HDR Lighting & Controls</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-400"/> AI Generator Access</li>
               </ul>
-              <button className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1">
+              <Link
+                href="/signup?plan=pro"
+                className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1 block text-center"
+              >
                 {t('subscribeBtn')}
-              </button>
+              </Link>
             </div>
             
             {/* Studio Plan */}
@@ -234,9 +240,12 @@ export default async function HomePage({
                 <li className="flex items-center gap-3"><CheckCircle2 size={20} className="text-blue-400"/> Custom Domain</li>
                 <li className="flex items-center gap-3"><CheckCircle2 size={20} className="text-blue-400"/> Team Collaboration</li>
               </ul>
-              <button className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold transition">
+              <Link
+                href="/signup?plan=enterprise"
+                className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold transition block text-center"
+              >
                 {t('subscribeBtn')}
-              </button>
+              </Link>
             </div>
           </div>
         </div>

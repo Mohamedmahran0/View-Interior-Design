@@ -291,6 +291,277 @@ function FurnitureMesh({ item }: { item: PlacedItem }) {
         </group>
       );
 
+    case 'wall':
+      return (
+        <group>
+          <mesh position={[0, 1.4, 0]} castShadow receiveShadow>
+            <boxGeometry args={[2.5, 2.8, 0.15]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={roughness ?? 0.85} metalness={metalness ?? 0.05} />
+          </mesh>
+          <mesh position={[0, 0.05, 0.08]} castShadow>
+            <boxGeometry args={[2.5, 0.1, 0.02]} />
+            <meshStandardMaterial color="#374151" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.05, -0.08]} castShadow>
+            <boxGeometry args={[2.5, 0.1, 0.02]} />
+            <meshStandardMaterial color="#374151" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 2.76, 0]} castShadow>
+            <boxGeometry args={[2.52, 0.08, 0.18]} />
+            <meshStandardMaterial color="#e5e7eb" roughness={0.7} />
+          </mesh>
+        </group>
+      );
+
+    case 'door':
+      return (
+        <group>
+          <mesh position={[-0.52, 1.2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.08, 2.4, 0.12]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.3} />
+          </mesh>
+          <mesh position={[0.52, 1.2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.08, 2.4, 0.12]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.3} />
+          </mesh>
+          <mesh position={[0, 2.36, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.12, 0.08, 0.12]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.3} />
+          </mesh>
+          <mesh position={[-0.04, 1.16, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.96, 2.32, 0.05]} />
+            <meshStandardMaterial color={color || '#5c3a21'} roughness={roughness ?? 0.6} metalness={metalness ?? 0.1} />
+          </mesh>
+          <mesh position={[0.36, 1.05, 0.04]} castShadow>
+            <boxGeometry args={[0.12, 0.02, 0.03]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.36, 1.05, -0.04]} castShadow>
+            <boxGeometry args={[0.12, 0.02, 0.03]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+          </mesh>
+        </group>
+      );
+
+    case 'window':
+      return (
+        <group>
+          <mesh position={[-1.0, 1.3, 0]} castShadow>
+            <boxGeometry args={[0.06, 2.6, 0.1]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[1.0, 1.3, 0]} castShadow>
+            <boxGeometry args={[0.06, 2.6, 0.1]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 2.57, 0]} castShadow>
+            <boxGeometry args={[2.06, 0.06, 0.1]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.03, 0]} castShadow>
+            <boxGeometry args={[2.06, 0.06, 0.1]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 1.3, 0]} castShadow>
+            <boxGeometry args={[0.04, 2.5, 0.08]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 1.3, 0]}>
+            <boxGeometry args={[1.96, 2.48, 0.015]} />
+            <meshPhysicalMaterial
+              transparent
+              opacity={0.3}
+              roughness={0.05}
+              transmission={0.9}
+              thickness={0.5}
+              color="#e0f2fe"
+            />
+          </mesh>
+        </group>
+      );
+
+    case 'column':
+      return (
+        <group>
+          <mesh position={[0, 0.06, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.55, 0.12, 0.55]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={0.3} metalness={0.1} />
+          </mesh>
+          <mesh position={[0, 1.44, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.22, 0.22, 2.64, 32]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={roughness ?? 0.3} metalness={metalness ?? 0.1} />
+          </mesh>
+          <mesh position={[0, 2.76, 0]} castShadow>
+            <boxGeometry args={[0.55, 0.12, 0.55]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={0.3} metalness={0.1} />
+          </mesh>
+        </group>
+      );
+
+    case 'stairs':
+      return (
+        <group>
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((stepIdx) => {
+            const y = 0.12 + stepIdx * 0.24;
+            const z = -0.9 + stepIdx * 0.28;
+            return (
+              <group key={stepIdx} position={[0, y, z]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[1.3, 0.06, 0.34]} />
+                  <meshStandardMaterial color={color || '#5c3a21'} roughness={roughness ?? 0.5} metalness={metalness ?? 0.1} />
+                </mesh>
+                <mesh position={[-0.66, 0.05, 0]} castShadow>
+                  <cylinderGeometry args={[0.015, 0.015, 0.12, 16]} />
+                  <meshStandardMaterial color="#94a3b8" metalness={0.9} roughness={0.2} />
+                </mesh>
+              </group>
+            );
+          })}
+          <mesh position={[-0.68, 1.15, 0.1]} rotation={[0.65, 0, 0]}>
+            <boxGeometry args={[0.02, 2.5, 0.85]} />
+            <meshPhysicalMaterial transparent opacity={0.35} transmission={0.8} roughness={0.1} color="#e2e8f0" />
+          </mesh>
+        </group>
+      );
+
+    case 'bed':
+      return (
+        <group>
+          <mesh position={[0, 0.72, -1.05]} castShadow receiveShadow>
+            <boxGeometry args={[2.2, 1.35, 0.18]} />
+            <meshStandardMaterial color={color || '#1e293b'} roughness={0.85} metalness={0.05} />
+          </mesh>
+          <mesh position={[0, 1.4, -1.05]} castShadow>
+            <boxGeometry args={[2.24, 0.04, 0.2]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0.16, 0.05]} castShadow receiveShadow>
+            <boxGeometry args={[2.0, 0.28, 2.1]} />
+            <meshStandardMaterial color="#334155" roughness={0.7} />
+          </mesh>
+          <mesh position={[0, 0.42, 0.05]} castShadow receiveShadow>
+            <boxGeometry args={[1.9, 0.28, 2.0]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.58, 0.25]} castShadow receiveShadow>
+            <boxGeometry args={[1.92, 0.08, 1.45]} />
+            <meshStandardMaterial color={color || '#0f766e'} roughness={0.85} />
+          </mesh>
+          {[-0.5, 0.5].map((x, i) => (
+            <group key={i} position={[x, 0.62, -0.68]} rotation={[0.2, 0, 0]}>
+              <mesh position={[0, 0, 0]} castShadow>
+                <boxGeometry args={[0.65, 0.14, 0.42]} />
+                <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
+              </mesh>
+              <mesh position={[0, 0.12, 0.06]} castShadow>
+                <boxGeometry args={[0.5, 0.1, 0.32]} />
+                <meshStandardMaterial color="#f59e0b" roughness={0.8} />
+              </mesh>
+            </group>
+          ))}
+          {[-1.38, 1.38].map((x, idx) => (
+            <group key={idx} position={[x, 0, -0.85]}>
+              <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+                <boxGeometry args={[0.5, 0.48, 0.45]} />
+                <meshStandardMaterial color="#1f2937" roughness={0.6} />
+              </mesh>
+              <mesh position={[0, 0.55, 0]} castShadow>
+                <cylinderGeometry args={[0.08, 0.1, 0.12, 16]} />
+                <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+              </mesh>
+              <mesh position={[0, 0.68, 0]} castShadow>
+                <cylinderGeometry args={[0.14, 0.18, 0.18, 16]} />
+                <meshStandardMaterial color="#fff" emissive="#fef08a" emissiveIntensity={0.25} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      );
+
+    case 'kitchen_island':
+      return (
+        <group>
+          <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
+            <boxGeometry args={[2.5, 0.06, 1.1]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={0.15} metalness={0.1} />
+          </mesh>
+          <mesh position={[-1.23, 0.46, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.06, 0.92, 1.1]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={0.15} metalness={0.1} />
+          </mesh>
+          <mesh position={[1.23, 0.46, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.06, 0.92, 1.1]} />
+            <meshStandardMaterial color={color || '#f3f4f6'} roughness={0.15} metalness={0.1} />
+          </mesh>
+          <mesh position={[0, 0.44, -0.1]} castShadow receiveShadow>
+            <boxGeometry args={[2.34, 0.88, 0.85]} />
+            <meshStandardMaterial color="#111827" roughness={0.7} />
+          </mesh>
+          <mesh position={[0.4, 0.93, 0]} castShadow>
+            <boxGeometry args={[0.55, 0.02, 0.42]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.3} />
+          </mesh>
+          <mesh position={[0.4, 1.08, -0.22]} castShadow>
+            <cylinderGeometry args={[0.015, 0.015, 0.28, 16]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+          </mesh>
+          {[-0.45, 0.45].map((x, i) => (
+            <group key={i} position={[x, 0, 0.8]}>
+              <mesh position={[0, 0.65, 0]} castShadow>
+                <cylinderGeometry args={[0.18, 0.18, 0.06, 24]} />
+                <meshStandardMaterial color="#5c3a21" roughness={0.6} />
+              </mesh>
+              <mesh position={[0, 0.32, 0]} castShadow>
+                <cylinderGeometry args={[0.02, 0.02, 0.64, 12]} />
+                <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      );
+
+    case 'balcony_railing':
+      return (
+        <group>
+          <mesh position={[0, 0.04, 0]} castShadow receiveShadow>
+            <boxGeometry args={[2.8, 0.08, 0.08]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
+          </mesh>
+          <mesh position={[0, 0.6, 0]}>
+            <boxGeometry args={[2.74, 1.06, 0.018]} />
+            <meshPhysicalMaterial transparent opacity={0.3} transmission={0.9} roughness={0.05} color="#e0f2fe" />
+          </mesh>
+          <mesh position={[0, 1.15, 0]} castShadow>
+            <boxGeometry args={[2.8, 0.04, 0.08]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
+          </mesh>
+          {[-1.38, 0, 1.38].map((x, i) => (
+            <mesh key={i} position={[x, 0.6, 0]} castShadow>
+              <boxGeometry args={[0.04, 1.12, 0.05]} />
+              <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
+            </mesh>
+          ))}
+        </group>
+      );
+
+    case 'curtain':
+      return (
+        <group>
+          <mesh position={[0, 2.78, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.015, 0.015, 2.6, 16]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[-0.95, 1.38, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.55, 2.74, 0.12]} />
+            <meshStandardMaterial color={color || '#f1f5f9'} roughness={0.95} metalness={0.0} />
+          </mesh>
+          <mesh position={[0.95, 1.38, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.55, 2.74, 0.12]} />
+            <meshStandardMaterial color={color || '#f1f5f9'} roughness={0.95} metalness={0.0} />
+          </mesh>
+        </group>
+      );
+
     case 'vase':
     default:
       return (

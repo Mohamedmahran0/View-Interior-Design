@@ -4,7 +4,24 @@ import { createClient } from '@/utils/supabase/client';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type HdrPreset = 'studio' | 'apartment' | 'city' | 'sunset' | 'dawn' | 'warehouse' | 'night';
-export type FurnitureType = 'sofa' | 'table' | 'chair' | 'lamp' | 'plant' | 'rug' | 'cabinet' | 'vase';
+export type FurnitureType =
+  | 'sofa'
+  | 'table'
+  | 'chair'
+  | 'lamp'
+  | 'plant'
+  | 'rug'
+  | 'cabinet'
+  | 'vase'
+  | 'wall'
+  | 'door'
+  | 'window'
+  | 'column'
+  | 'stairs'
+  | 'bed'
+  | 'kitchen_island'
+  | 'balcony_railing'
+  | 'curtain';
 
 export interface PlacedItem {
   id: string;
@@ -193,6 +210,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       rug: 'Geometric Area Rug',
       cabinet: 'Minimalist Media Credenza',
       vase: 'Ceramic Art Vase',
+      wall: 'Architectural Modular Wall',
+      door: 'Architectural Framed Door',
+      window: 'Floor-to-Ceiling Panoramic Window',
+      column: 'Structural Column Pillar',
+      stairs: 'Floating Villa Stairs',
+      bed: 'Master Luxury Bed',
+      kitchen_island: 'Marble Kitchen Island',
+      balcony_railing: 'Glass Terrace Railing',
+      curtain: 'Pleated Fabric Drapery',
     };
     const newItem: PlacedItem = {
       id: newId,

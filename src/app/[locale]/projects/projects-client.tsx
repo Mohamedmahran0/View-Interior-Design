@@ -38,7 +38,7 @@ function SkeletonCard() {
 }
 
 export default function ProjectsClient() {
-  const { projects, loading, error, deleteProject } = useProjects();
+  const { projects, loading, error, isSchemaMissing, deleteProject } = useProjects();
   const [filter, setFilter] = useState<Project['status'] | 'all'>('all');
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -84,6 +84,42 @@ export default function ProjectsClient() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (isSchemaMissing) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 sm:p-12 text-center max-w-3xl mx-auto backdrop-blur-xl">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-6">
+            <AlertCircle size={32} />
+          </div>
+          <h2 className="text-2xl font-bold mb-3 text-white">قاعدة البيانات تحتاج إلى تهيئة الجداول في Supabase</h2>
+          <p className="text-sm font-medium text-amber-300 mb-2">Database Schema Not Initialized Yet</p>
+          <p className="text-white/70 mb-6 leading-relaxed max-w-xl mx-auto text-sm sm:text-base">
+            تم توصيل مشروع Supabase بنجاح، لكن جدول المشاريع <code className="px-2 py-0.5 rounded bg-black/40 text-amber-300 font-mono text-xs">public.projects</code> وباقي الجداول بحاجة إلى تشغيل ملف <code className="px-2 py-0.5 rounded bg-black/40 text-emerald-300 font-mono text-xs">supabase/schema.sql</code> لمرة واحدة في محرر الـ SQL.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="https://supabase.com/dashboard/project/lkdnyojlbugtkrfvxhzh/sql/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+            >
+              <span>فتح محرر Supabase SQL الآن</span>
+              <Globe size={16} />
+            </a>
+            <Link
+              href="/editor/new"
+              className="w-full sm:w-auto px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2"
+            >
+              <Plus size={16} />
+              <span>تجربة محرر 3D الآن</span>
+            </Link>
+          </div>
         </div>
       </div>
     );

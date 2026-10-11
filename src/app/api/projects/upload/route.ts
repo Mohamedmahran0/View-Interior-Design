@@ -39,6 +39,19 @@ export async function POST(request: Request) {
       const { data: tokenData, error: tokenErr } = await serviceClient.auth.getUser(token);
       if (!tokenErr && tokenData?.user) {
         user = tokenData.user;
+      } else {
+        // Also support user UUID token directly from user settings
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(token)) {
+          const { data: profileUser } = await serviceClient
+            .from('profiles')
+            .select('id, email, full_name')
+            .eq('id', token)
+            .single();
+          if (profileUser) {
+            user = { id: profileUser.id, email: profileUser.email, user_metadata: { full_name: profileUser.full_name } };
+          }
+        }
       }
     }
 

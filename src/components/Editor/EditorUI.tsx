@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
@@ -28,6 +28,7 @@ import {
   Check,
   Crown,
   ShieldCheck,
+  User,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useEditorStore, HdrPreset, FurnitureType } from '@/store/editorStore';
@@ -58,15 +59,38 @@ const MATERIAL_PRESETS = [
   { name: 'Emerald Velvet', color: '#065f46', roughness: 0.7, metalness: 0.1 },
 ];
 
-const CATALOG_ITEMS: { type: FurnitureType; nameAr: string; nameEn: string; icon: string; category: string }[] = [
-  { type: 'sofa', nameAr: 'كنبة مودرن 3 مقاعد', nameEn: 'Modern Modular Sofa', icon: '🛋️', category: 'جلوس' },
-  { type: 'table', nameAr: 'طاولة قهوة رخام', nameEn: 'Marble Coffee Table', icon: '☕', category: 'طاولات' },
-  { type: 'chair', nameAr: 'كرسي استرخاء مخملي', nameEn: 'Velvet Lounge Chair', icon: '🪑', category: 'جلوس' },
-  { type: 'lamp', nameAr: 'مصباح أرضي نحاسي', nameEn: 'Brass Floor Lamp', icon: '💡', category: 'إضاءة' },
-  { type: 'plant', nameAr: 'نبات زينة مونستيرا', nameEn: 'Monstera Palm Plant', icon: '🌿', category: 'ديكور' },
-  { type: 'rug', nameAr: 'سجادة صوف هندسية', nameEn: 'Designer Wool Rug', icon: '🧶', category: 'أرضيات' },
-  { type: 'cabinet', nameAr: 'طاولة تلفاز عصرية', nameEn: 'Media Credenza', icon: '🗄️', category: 'تخزين' },
-  { type: 'vase', nameAr: 'فازة سيراميك فنية', nameEn: 'Ceramic Art Vase', icon: '🏺', category: 'إكسسوارات' },
+const CATALOG_ITEMS: {
+  type: FurnitureType;
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  category: string;
+  group: 'all' | 'architecture' | 'rooms' | 'living' | 'decor';
+}[] = [
+  // 1. Architecture & Building Elements (مباني وفلل)
+  { type: 'wall', nameAr: 'جدار قواطع معماري', nameEn: 'Modular Partition Wall', icon: '🧱', category: 'مباني وفلل', group: 'architecture' },
+  { type: 'door', nameAr: 'باب داخلي مع إطار', nameEn: 'Architectural Door', icon: '🚪', category: 'مباني وفلل', group: 'architecture' },
+  { type: 'window', nameAr: 'نافذة بانورامية كبيرة', nameEn: 'Floor-to-Ceiling Window', icon: '🪟', category: 'مباني وفلل', group: 'architecture' },
+  { type: 'column', nameAr: 'عمود خرساني إنشائي', nameEn: 'Structural Column Pillar', icon: '🏛️', category: 'مباني وفلل', group: 'architecture' },
+  { type: 'stairs', nameAr: 'درج فيلا عائم عصري', nameEn: 'Floating Villa Stairs', icon: '🪜', category: 'مباني وفلل', group: 'architecture' },
+  { type: 'balcony_railing', nameAr: 'حاجز تراس وشرفة زجاجي', nameEn: 'Glass Balcony Railing', icon: '🛡️', category: 'مباني وفلل', group: 'architecture' },
+
+  // 2. Rooms & Apartments (غرف وشقق)
+  { type: 'bed', nameAr: 'سرير كينغ مع كومودينو', nameEn: 'Master Luxury Bed', icon: '🛏️', category: 'غرف النوم', group: 'rooms' },
+  { type: 'kitchen_island', nameAr: 'جزيرة مطبخ رخام شلال', nameEn: 'Marble Kitchen Island', icon: '🍳', category: 'المطابخ', group: 'rooms' },
+
+  // 3. Living & Seating (أثاث وصالون)
+  { type: 'sofa', nameAr: 'كنبة مودرن 3 مقاعد', nameEn: 'Modern Modular Sofa', icon: '🛋️', category: 'جلوس', group: 'living' },
+  { type: 'table', nameAr: 'طاولة قهوة رخام', nameEn: 'Marble Coffee Table', icon: '☕', category: 'طاولات', group: 'living' },
+  { type: 'chair', nameAr: 'كرسي استرخاء مخملي', nameEn: 'Velvet Lounge Chair', icon: '🪑', category: 'جلوس', group: 'living' },
+  { type: 'cabinet', nameAr: 'طاولة تلفاز عصرية', nameEn: 'Media Credenza', icon: '🗄️', category: 'تخزين', group: 'living' },
+
+  // 4. Lighting & Decor (إضاءة وديكور)
+  { type: 'lamp', nameAr: 'مصباح أرضي نحاسي', nameEn: 'Brass Floor Lamp', icon: '💡', category: 'إضاءة', group: 'decor' },
+  { type: 'curtain', nameAr: 'ستائر قماشية فاخرة', nameEn: 'Modern Drapery', icon: '🪟', category: 'ديكور', group: 'decor' },
+  { type: 'plant', nameAr: 'نبات زينة مونستيرا', nameEn: 'Monstera Palm Plant', icon: '🌿', category: 'ديكور', group: 'decor' },
+  { type: 'rug', nameAr: 'سجادة صوف هندسية', nameEn: 'Designer Wool Rug', icon: '🧶', category: 'أرضيات', group: 'decor' },
+  { type: 'vase', nameAr: 'فازة سيراميك فنية', nameEn: 'Ceramic Art Vase', icon: '🏺', category: 'إكسسوارات', group: 'decor' },
 ];
 
 export default function EditorUI({ projectId, projectName = 'Untitled Project' }: EditorUIProps) {
@@ -105,12 +129,29 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
   } = useEditorStore();
 
   const [activeTab, setActiveTab] = useState<'catalog' | 'transform' | 'material' | 'environment'>('catalog');
+  const [catalogFilter, setCatalogFilter] = useState<'all' | 'architecture' | 'rooms' | 'living' | 'decor'>('all');
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(projectId);
   const [copiedShare, setCopiedShare] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [selectedPlanTier, setSelectedPlanTier] = useState<'free' | 'pro' | 'studio'>('pro');
   const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    fetchUser();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, [supabase]);
 
   const handleGoogleSignIn = async (plan: 'free' | 'pro' | 'studio' = 'free') => {
     setIsGoogleLoading(true);
@@ -129,11 +170,51 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
   };
 
   const handleManualSave = async () => {
-    if (!projectId) {
+    const activeId = currentProjectId || projectId;
+    if (!currentUser && !activeId) {
       setShowGuestModal(true);
       return;
     }
-    await saveToSupabase(projectId);
+
+    if (currentUser && !activeId) {
+      try {
+        const metadata = useEditorStore.getState().serializeScene();
+        const { data: newProj, error: createErr } = await supabase
+          .from('projects')
+          .insert({
+            user_id: currentUser.id,
+            owner_id: currentUser.id,
+            name: projectName && projectName !== 'Untitled Project' ? projectName : 'مشروع تصميم جديد',
+            scene_metadata: metadata,
+            scene_data: metadata,
+            status: 'draft',
+          })
+          .select()
+          .single();
+
+        if (createErr) {
+          console.warn('Could not auto-create project table record:', createErr.message);
+          if (createErr.message?.includes('schema cache')) {
+            alert('قاعدة البيانات تحتاج لتشغيل schema.sql في Supabase لحفظ المشاريع.');
+          } else {
+            alert('خطأ أثناء حفظ المشروع: ' + createErr.message);
+          }
+          return;
+        }
+
+        if (newProj?.id) {
+          setCurrentProjectId(newProj.id);
+          alert('تم حفظ المشروع بنجاح في حسابك!');
+        }
+      } catch (err: any) {
+        console.error(err);
+      }
+      return;
+    }
+
+    if (activeId) {
+      await saveToSupabase(activeId);
+    }
   };
 
   const handleExportGLB = () => {
@@ -191,34 +272,53 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
 
   return (
     <div className="absolute inset-0 z-10 pointer-events-none flex flex-col font-sans select-none">
-      {/* Guest Mode Demo Banner */}
-      {!projectId && (
-        <div className="bg-gradient-to-r from-emerald-950/95 via-neutral-900/95 to-blue-950/95 border-b border-emerald-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs backdrop-blur-md pointer-events-auto shrink-0 shadow-md gap-2">
-          <div className="flex items-center gap-2.5 text-white/90">
-            <span className="flex h-2 w-2 relative shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="font-medium text-xs sm:text-sm">
-              ✨ <strong>{t('guestBanner')}</strong>
-            </span>
+      {/* Guest Mode Demo Banner / Authenticated Banner */}
+      {!projectId && !currentProjectId && (
+        !currentUser ? (
+          <div className="bg-gradient-to-r from-emerald-950/95 via-neutral-900/95 to-blue-950/95 border-b border-emerald-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs backdrop-blur-md pointer-events-auto shrink-0 shadow-md gap-2">
+            <div className="flex items-center gap-2.5 text-white/90">
+              <span className="flex h-2 w-2 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="font-medium text-xs sm:text-sm">
+                ✨ <strong>{t('guestBanner')}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowGuestModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shadow-sm cursor-pointer"
+              >
+                <Sparkles size={13} />
+                {t('guestAction')}
+              </button>
+              <Link
+                href="/login?redirect=/editor"
+                className="px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white transition font-medium"
+              >
+                تسجيل الدخول
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowGuestModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shadow-sm cursor-pointer"
-            >
-              <Sparkles size={13} />
-              {t('guestAction')}
-            </button>
-            <Link
-              href="/login?redirect=/editor"
-              className="px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white transition font-medium"
-            >
-              تسجيل الدخول
-            </Link>
+        ) : (
+          <div className="bg-gradient-to-r from-emerald-950/85 via-neutral-900/85 to-blue-950/85 border-b border-emerald-500/20 px-4 py-1.5 flex flex-wrap items-center justify-between text-xs backdrop-blur-md pointer-events-auto shrink-0 shadow-sm gap-2">
+            <div className="flex items-center gap-2 text-white/90">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span className="text-white/80">
+                أهلاً بك <strong>{currentUser.email?.split('@')[0]}</strong> • أنت تصمم بحسابك المسجل. اضغط &quot;حفظ&quot; لمزامنة مشروعك في لوحة التحكم.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                className="px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white transition font-medium text-xs"
+              >
+                لوحة التحكم
+              </Link>
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Top Navbar */}
@@ -359,8 +459,22 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            <span>{projectId ? 'Save' : 'حفظ واشتراك'}</span>
+            <span>{currentProjectId || currentUser ? 'حفظ' : 'حفظ واشتراك'}</span>
           </button>
+
+          {/* User Badge if Logged In */}
+          {currentUser && (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white border border-white/10 transition"
+              title="لوحة التحكم"
+            >
+              <div className="w-5 h-5 rounded-full bg-emerald-500 text-[10px] font-bold flex items-center justify-center text-black">
+                {currentUser.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <span className="hidden sm:inline font-medium max-w-[85px] truncate">{currentUser.email?.split('@')[0]}</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -425,9 +539,32 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
                   </p>
                 </div>
 
+                {/* Category Filter Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                  {[
+                    { id: 'all', label: 'الكل' },
+                    { id: 'architecture', label: 'مباني وفلل 🏛️' },
+                    { id: 'rooms', label: 'غرف وشقق 🛏️' },
+                    { id: 'living', label: 'أثاث 🛋️' },
+                    { id: 'decor', label: 'ديكور 💡' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setCatalogFilter(cat.id as any)}
+                      className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition cursor-pointer ${
+                        catalogFilter === cat.id
+                          ? 'bg-emerald-500 text-white shadow-sm'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Grid of Addable Items */}
                 <div className="grid grid-cols-2 gap-2.5">
-                  {CATALOG_ITEMS.map((item) => (
+                  {CATALOG_ITEMS.filter((item) => catalogFilter === 'all' || item.group === catalogFilter).map((item) => (
                     <button
                       key={item.type}
                       onClick={() => addPlacedObject(item.type)}
