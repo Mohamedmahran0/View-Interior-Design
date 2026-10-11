@@ -6,7 +6,7 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-const protectedRoutes = ['/dashboard', '/projects', '/editor', '/account'];
+const protectedRoutes = ['/dashboard', '/projects', '/account'];
 const adminRoutes = ['/admin/dashboard', '/admin/users', '/admin/subscriptions', '/admin/transactions', '/admin/projects', '/admin/assets', '/admin/settings'];
 
 export async function proxy(request: NextRequest) {
@@ -60,7 +60,8 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(targetUrl);
     }
 
-    const isProtected = protectedRoutes.some(route => pathWithoutLocale.startsWith(route));
+    const isSpecificProject = pathWithoutLocale.startsWith('/editor/') && pathWithoutLocale !== '/editor/new';
+    const isProtected = protectedRoutes.some(route => pathWithoutLocale.startsWith(route)) || isSpecificProject;
     const isAdmin = adminRoutes.some(route => pathWithoutLocale.startsWith(route));
     const isAdminLogin = pathWithoutLocale === '/admin/login';
 

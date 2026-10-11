@@ -49,11 +49,21 @@
     "aiGeneration": "مولد الذكاء الاصطناعي",
     "aiDesc": "صف غرفتك المثالية ودع الذكاء الاصطناعي يولد التصميم الأساسي.",
     "aiPromptPlaceholder": "مثال: غرفة معيشة عصرية بإضاءة دافئة...",
-    "generateDesign": "توليد التصميم"
+    "generateDesign": "توليد التصميم",
+    "guestBanner": "وضع التجربة المباشرة: صمم وحرك الأثاث واستكشف الخامات ثلاثية الأبعاد بحرية!",
+    "guestAction": "اشترك لحفظ وتصدير التصميم",
+    "guestModalTitle": "اشترك الآن لحفظ مشروعك وتصديره",
+    "guestModalDesc": "أعجبك التصميم؟ اشترك بضغطة زر لحفظ غرفتك سحابياً، تصدير ملفات 3D GLB بدقة واقعية، والربط المباشر مع 3ds Max.",
+    "guestModalGoogle": "تسجيل الدخول / الاشتراك بضغطة زر عبر Google",
+    "guestModalEmail": "إنشاء حساب جديد بالبريد الإلكتروني",
+    "guestModalContinue": "متابعة التصميم كضيف"
   },
   "Auth": {
     "loginTitle": "مرحباً بعودتك",
     "loginSubtitle": "سجل الدخول إلى حسابك للمتابعة",
+    "googleSignIn": "متابعة باستخدام Google",
+    "googleSignUp": "التسجيل باستخدام Google",
+    "orDivider": "أو بالمتابعة التقليدية",
     "emailLabel": "البريد الإلكتروني",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "كلمة المرور",

@@ -22,10 +22,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  X,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useEditorStore, HdrPreset, TransformMode } from '@/store/editorStore';
 import { GLTFExporter } from 'three-stdlib';
+import { createClient } from '@/utils/supabase/client';
 
 interface EditorUIProps {
   projectId?: string;
@@ -85,13 +87,38 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
   const [activeTab, setActiveTab] = useState<'transform' | 'material' | 'environment'>('transform');
   const [copiedShare, setCopiedShare] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const supabase = createClient();
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    const origin = window.location.origin;
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${origin}/api/auth/callback?redirect=${encodeURIComponent('/editor')}`,
+      },
+    });
+    if (oauthError) {
+      alert(oauthError.message);
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleManualSave = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setShowGuestModal(true);
+      return;
+    }
     await saveToSupabase(projectId);
   };
 
   const handleExportGLB = () => {
+    if (!projectId) {
+      setShowGuestModal(true);
+      return;
+    }
     setIsExporting(true);
     const container = document.getElementById('canvas-container');
     const canvas = container?.querySelector('canvas');
@@ -142,6 +169,36 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
 
   return (
     <div className="absolute inset-0 z-10 pointer-events-none flex flex-col font-sans select-none">
+      {/* Guest Mode Demo Banner */}
+      {!projectId && (
+        <div className="bg-gradient-to-r from-emerald-950/95 via-neutral-900/95 to-blue-950/95 border-b border-emerald-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs backdrop-blur-md pointer-events-auto shrink-0 shadow-md gap-2">
+          <div className="flex items-center gap-2.5 text-white/90">
+            <span className="flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-medium text-xs sm:text-sm">
+              🎯 <strong>{t('guestBanner')}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowGuestModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shadow-sm cursor-pointer"
+            >
+              <Sparkles size={13} />
+              {t('guestAction')}
+            </button>
+            <Link
+              href="/login?redirect=/editor"
+              className="px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white transition font-medium"
+            >
+              تسجيل الدخول
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <header className="h-14 border-b border-white/10 bg-black/85 backdrop-blur-md flex items-center justify-between px-4 pointer-events-auto shrink-0 shadow-lg">
         {/* Left: Back & Project Title */}
@@ -271,12 +328,19 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
             {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export GLB
           </button>
 
-          {/* Manual Save */}
-          {projectId && (
+          {/* Action button: Save or Guest Subscribe */}
+          {!projectId ? (
+            <button
+              onClick={() => setShowGuestModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/25 transition cursor-pointer"
+            >
+              <Sparkles size={14} /> {t('guestAction')}
+            </button>
+          ) : (
             <button
               onClick={handleManualSave}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20 transition"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20 transition cursor-pointer"
             >
               <Save size={14} /> Save
             </button>
@@ -574,6 +638,67 @@ export default function EditorUI({ projectId, projectName = 'Untitled Project' }
           </div>
         </aside>
       </div>
+
+      {/* Guest Mode Subscription Modal */}
+      {showGuestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pointer-events-auto animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-3xl bg-neutral-900 border border-emerald-500/30 p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
+            {/* Background glow */}
+            <div className="absolute -top-20 -left-20 w-44 h-44 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-44 h-44 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Close button */}
+            <button
+              onClick={() => setShowGuestModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white p-2 rounded-full transition cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Icon */}
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+              <Sparkles size={28} />
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+              {t('guestModalTitle')}
+            </h3>
+            <p className="text-white/60 text-sm mb-6 leading-relaxed">
+              {t('guestModalDesc')}
+            </p>
+
+            {/* Google OAuth Button */}
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl bg-white text-neutral-900 hover:bg-neutral-100 font-semibold transition shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer mb-3"
+            >
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>{isGoogleLoading ? 'جاري التحويل إلى Google...' : t('guestModalGoogle')}</span>
+            </button>
+
+            {/* Email Sign Up Option */}
+            <Link
+              href="/signup?redirect=/editor"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium transition border border-white/10 text-sm mb-4"
+            >
+              {t('guestModalEmail')}
+            </Link>
+
+            <button
+              onClick={() => setShowGuestModal(false)}
+              className="text-xs text-white/40 hover:text-white/70 transition cursor-pointer"
+            >
+              {t('guestModalContinue')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

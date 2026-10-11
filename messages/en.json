@@ -47,11 +47,21 @@
     "aiGeneration": "AI Generator",
     "aiDesc": "Describe your ideal room and let AI generate a base design.",
     "aiPromptPlaceholder": "e.g. Modern living room with warm lighting...",
-    "generateDesign": "Generate Design"
+    "generateDesign": "Generate Design",
+    "guestBanner": "Interactive Demo Mode: Move furniture, switch materials & explore the 3D room freely!",
+    "guestAction": "Subscribe to Save & Export",
+    "guestModalTitle": "Subscribe to Save & Export Your 3D Designs",
+    "guestModalDesc": "Loving your design? Sign up in seconds to save your rooms to the cloud, export photorealistic 3D GLBs, and sync with 3ds Max.",
+    "guestModalGoogle": "Continue / Sign Up with Google",
+    "guestModalEmail": "Create an Account with Email",
+    "guestModalContinue": "Continue designing as guest"
   },
   "Auth": {
     "loginTitle": "Welcome Back",
     "loginSubtitle": "Sign in to your account to continue",
+    "googleSignIn": "Continue with Google",
+    "googleSignUp": "Sign up with Google",
+    "orDivider": "Or continue with email",
     "emailLabel": "Email Address",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",

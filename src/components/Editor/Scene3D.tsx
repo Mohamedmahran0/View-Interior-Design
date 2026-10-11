@@ -260,9 +260,10 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
         </Suspense>
       ) : (
         <group position={[0, 0, 0]}>
+          {/* Piece 1: Modern Designer Coffee Table (Default Target) */}
           <mesh
             ref={defaultMeshRef}
-            position={[0, 0.45, 0]}
+            position={[0, 0.25, 0]}
             castShadow
             receiveShadow
             onClick={(e) => {
@@ -270,12 +271,92 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
               handleObjectSelect(e.object);
             }}
           >
-            <boxGeometry args={[1.2, 0.9, 1.2]} />
+            <boxGeometry args={[1.6, 0.45, 0.9]} />
             <meshStandardMaterial
               color={selectedMaterial.color}
               roughness={selectedMaterial.roughness}
               metalness={selectedMaterial.metalness}
             />
+          </mesh>
+
+          {/* Piece 2: Sleek Low-Profile Modern Sofa */}
+          <group position={[0, 0, -1.6]}>
+            {/* Sofa Base */}
+            <mesh
+              position={[0, 0.35, 0]}
+              castShadow
+              receiveShadow
+              onClick={(e) => {
+                e.stopPropagation();
+                handleObjectSelect(e.object);
+              }}
+            >
+              <boxGeometry args={[2.8, 0.5, 1.1]} />
+              <meshStandardMaterial color="#27272a" roughness={0.8} metalness={0.05} />
+            </mesh>
+            {/* Sofa Backrest */}
+            <mesh position={[0, 0.8, -0.4]} castShadow receiveShadow>
+              <boxGeometry args={[2.8, 0.6, 0.3]} />
+              <meshStandardMaterial color="#27272a" roughness={0.85} metalness={0.05} />
+            </mesh>
+            {/* Left Armrest */}
+            <mesh position={[-1.3, 0.55, 0]} castShadow receiveShadow>
+              <boxGeometry args={[0.25, 0.45, 1.1]} />
+              <meshStandardMaterial color="#1f2937" roughness={0.8} metalness={0.05} />
+            </mesh>
+            {/* Right Armrest */}
+            <mesh position={[1.3, 0.55, 0]} castShadow receiveShadow>
+              <boxGeometry args={[0.25, 0.45, 1.1]} />
+              <meshStandardMaterial color="#1f2937" roughness={0.8} metalness={0.05} />
+            </mesh>
+          </group>
+
+          {/* Piece 3: Accent Lounge Armchair */}
+          <mesh
+            position={[-2.2, 0.4, 0.1]}
+            rotation={[0, Math.PI / 4, 0]}
+            castShadow
+            receiveShadow
+            onClick={(e) => {
+              e.stopPropagation();
+              handleObjectSelect(e.object);
+            }}
+          >
+            <boxGeometry args={[0.9, 0.7, 0.9]} />
+            <meshStandardMaterial color="#065f46" roughness={0.7} metalness={0.1} />
+          </mesh>
+
+          {/* Piece 4: Minimalist Floor Lamp */}
+          <group position={[2.2, 0, -1.8]}>
+            <mesh position={[0, 1.1, 0]} castShadow>
+              <cylinderGeometry args={[0.03, 0.03, 2.2, 16]} />
+              <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+            </mesh>
+            <mesh
+              position={[0, 2.1, 0]}
+              castShadow
+              onClick={(e) => {
+                e.stopPropagation();
+                handleObjectSelect(e.object);
+              }}
+            >
+              <cylinderGeometry args={[0.25, 0.35, 0.4, 32]} />
+              <meshStandardMaterial color="#fef08a" roughness={0.3} emissive="#fef08a" emissiveIntensity={0.2} />
+            </mesh>
+          </group>
+
+          {/* Piece 5: Decorative Vase / Art Piece on Table */}
+          <mesh
+            position={[0.35, 0.58, 0]}
+            castShadow
+            receiveShadow
+            onClick={(e) => {
+              e.stopPropagation();
+              handleObjectSelect(e.object);
+            }}
+          >
+            <sphereGeometry args={[0.13, 32, 32]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.15} />
           </mesh>
         </group>
       )}
