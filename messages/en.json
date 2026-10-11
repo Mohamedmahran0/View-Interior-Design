@@ -347,5 +347,24 @@
     "addAdmin": "Add Admin",
     "removeAdmin": "Remove Admin",
     "exportData": "Export Database"
+  },
+  "Editor": {
+    "guestBanner": "You are exploring in Free 3D Guest Mode — design and add furniture freely!",
+    "guestAction": "Save & Upgrade Plan",
+    "guestModalTitle": "Choose Your Plan & Start Designing",
+    "guestModalDesc": "Sign in with one click via Google to save your scenes, export in 4K GLB, and access photorealistic HDR lighting.",
+    "guestModalGoogle": "Continue with Google",
+    "guestModalEmail": "Or continue with Email",
+    "guestModalContinue": "Continue exploring in Guest Mode",
+    "planFree": "Free Plan",
+    "planFreeDesc": "Start free with 3 projects & standard export",
+    "planPro": "Pro Plan",
+    "planProDesc": "Unlimited projects, 4K GLB, and 3ds Max plugin",
+    "planStudio": "Studio Plan",
+    "planStudioDesc": "Cloud render, AI generation, and team collaboration",
+    "catalogTab": "Furniture Catalog",
+    "catalogAdd": "Add to Scene",
+    "catalogInScene": "items in scene",
+    "catalogEmpty": "No furniture in scene yet"
   }
 }

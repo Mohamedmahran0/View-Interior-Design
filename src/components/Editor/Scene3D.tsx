@@ -2,9 +2,17 @@
 
 import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid, Environment, PointerLockControls, TransformControls, useGLTF } from '@react-three/drei';
+import {
+  OrbitControls,
+  Grid,
+  Environment,
+  PointerLockControls,
+  TransformControls,
+  ContactShadows,
+  useGLTF,
+} from '@react-three/drei';
 import * as THREE from 'three';
-import { useEditorStore } from '@/store/editorStore';
+import { useEditorStore, PlacedItem } from '@/store/editorStore';
 import Room from './Room';
 
 // WASD Keyboard Movement for First-Person Walkthrough
@@ -51,7 +59,7 @@ function WalkthroughMovement() {
   return null;
 }
 
-// Dynamic GLB Model Loader component
+// Dynamic GLB Model Loader component (for uploaded user models)
 function LoadedModel({ url, onSelect }: { url: string; onSelect: (obj: THREE.Object3D) => void }) {
   const { scene } = useGLTF(url);
 
@@ -75,6 +83,239 @@ function LoadedModel({ url, onSelect }: { url: string; onSelect: (obj: THREE.Obj
   );
 }
 
+// Realistic Parametric 3D Furniture Items
+function FurnitureMesh({ item }: { item: PlacedItem }) {
+  const color = item.material?.color || '#3b82f6';
+  const roughness = item.material?.roughness ?? 0.5;
+  const metalness = item.material?.metalness ?? 0.1;
+
+  switch (item.type) {
+    case 'sofa':
+      return (
+        <group>
+          {/* Main Seat Cushion */}
+          <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+            <boxGeometry args={[2.5, 0.42, 1.05]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Backrest */}
+          <mesh position={[0, 0.78, -0.38]} castShadow receiveShadow>
+            <boxGeometry args={[2.5, 0.58, 0.28]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Left Armrest */}
+          <mesh position={[-1.25, 0.52, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.26, 0.48, 1.06]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Right Armrest */}
+          <mesh position={[1.25, 0.52, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.26, 0.48, 1.06]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Throw Accent Pillows */}
+          <mesh position={[-0.8, 0.62, -0.22]} rotation={[0, 0.2, 0.1]} castShadow>
+            <boxGeometry args={[0.42, 0.38, 0.12]} />
+            <meshStandardMaterial color="#f59e0b" roughness={0.7} />
+          </mesh>
+          <mesh position={[0.8, 0.62, -0.22]} rotation={[0, -0.2, -0.1]} castShadow>
+            <boxGeometry args={[0.42, 0.38, 0.12]} />
+            <meshStandardMaterial color="#0ea5e9" roughness={0.7} />
+          </mesh>
+          {/* Tapered Brass Legs */}
+          {([[-1.15, -0.4], [1.15, -0.4], [-1.15, 0.4], [1.15, 0.4]] as const).map(([x, z], idx) => (
+            <mesh key={idx} position={[x, 0.07, z]} castShadow>
+              <cylinderGeometry args={[0.02, 0.03, 0.14, 16]} />
+              <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+            </mesh>
+          ))}
+        </group>
+      );
+
+    case 'table':
+      return (
+        <group>
+          {/* Polished Table Slab */}
+          <mesh position={[0, 0.42, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.5, 0.05, 0.85]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Smoked Glass Lower Tier */}
+          <mesh position={[0, 0.18, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.35, 0.02, 0.72]} />
+            <meshPhysicalMaterial transparent opacity={0.5} roughness={0.1} color="#0f172a" />
+          </mesh>
+          {/* Architectural Steel Legs */}
+          {([[-0.68, -0.38], [0.68, -0.38], [-0.68, 0.38], [0.68, 0.38]] as const).map(([x, z], idx) => (
+            <mesh key={idx} position={[x, 0.21, z]} castShadow>
+              <cylinderGeometry args={[0.018, 0.018, 0.42, 16]} />
+              <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
+            </mesh>
+          ))}
+        </group>
+      );
+
+    case 'chair':
+      return (
+        <group>
+          {/* Cushion */}
+          <mesh position={[0, 0.38, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.85, 0.16, 0.82]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Angled Backrest */}
+          <mesh position={[0, 0.72, -0.34]} rotation={[0.1, 0, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.85, 0.54, 0.14]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Low Armrests */}
+          <mesh position={[-0.42, 0.5, 0]} castShadow>
+            <boxGeometry args={[0.1, 0.22, 0.75]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          <mesh position={[0.42, 0.5, 0]} castShadow>
+            <boxGeometry args={[0.1, 0.22, 0.75]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Splayed Solid Wood Legs */}
+          {([[-0.34, -0.3], [0.34, -0.3], [-0.34, 0.3], [0.34, 0.3]] as const).map(([x, z], idx) => (
+            <mesh key={idx} position={[x, 0.15, z]} rotation={[z > 0 ? 0.1 : -0.1, 0, x > 0 ? -0.1 : 0.1]} castShadow>
+              <cylinderGeometry args={[0.02, 0.015, 0.32, 16]} />
+              <meshStandardMaterial color="#5c3a21" roughness={0.6} />
+            </mesh>
+          ))}
+        </group>
+      );
+
+    case 'lamp':
+      return (
+        <group>
+          {/* Heavy Brass Base */}
+          <mesh position={[0, 0.02, 0]} castShadow>
+            <cylinderGeometry args={[0.22, 0.24, 0.04, 32]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.25} />
+          </mesh>
+          {/* Slender Stem */}
+          <mesh position={[0, 1.0, 0]} castShadow>
+            <cylinderGeometry args={[0.018, 0.018, 1.96, 16]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.25} />
+          </mesh>
+          {/* Luminous Lampshade */}
+          <mesh position={[0, 1.95, 0]} castShadow>
+            <cylinderGeometry args={[0.24, 0.34, 0.42, 32]} />
+            <meshStandardMaterial
+              color="#fffbeb"
+              roughness={0.4}
+              emissive="#fef08a"
+              emissiveIntensity={0.35}
+            />
+          </mesh>
+          {/* Warm Internal Glow */}
+          <pointLight position={[0, 1.9, 0]} intensity={1.5} distance={5} color="#fed7aa" decay={2} castShadow />
+        </group>
+      );
+
+    case 'plant':
+      return (
+        <group>
+          {/* Architectural Ceramic Pot */}
+          <mesh position={[0, 0.22, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.24, 0.18, 0.44, 32]} />
+            <meshStandardMaterial color="#e5e7eb" roughness={0.35} metalness={0.1} />
+          </mesh>
+          {/* Soil */}
+          <mesh position={[0, 0.42, 0]}>
+            <cylinderGeometry args={[0.22, 0.22, 0.04, 32]} />
+            <meshStandardMaterial color="#2d1810" roughness={0.95} />
+          </mesh>
+          {/* Trunk & Tropical Leaves */}
+          <mesh position={[0, 0.72, 0]} castShadow>
+            <cylinderGeometry args={[0.02, 0.025, 0.6, 12]} />
+            <meshStandardMaterial color="#14532d" roughness={0.6} />
+          </mesh>
+          {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+            const rad = THREE.MathUtils.degToRad(deg);
+            return (
+              <mesh
+                key={i}
+                position={[Math.sin(rad) * 0.25, 0.75 + (i % 3) * 0.15, Math.cos(rad) * 0.25]}
+                rotation={[0.3, rad, 0.2]}
+                castShadow
+              >
+                <boxGeometry args={[0.28, 0.015, 0.42]} />
+                <meshStandardMaterial color={color || '#15803d'} roughness={0.45} />
+              </mesh>
+            );
+          })}
+        </group>
+      );
+
+    case 'rug':
+      return (
+        <group>
+          <mesh position={[0, 0.008, 0]} receiveShadow>
+            <boxGeometry args={[2.8, 0.016, 2.0]} />
+            <meshStandardMaterial color={color} roughness={0.98} metalness={0.0} />
+          </mesh>
+          <mesh position={[0, 0.009, 0]} receiveShadow>
+            <boxGeometry args={[2.86, 0.014, 2.06]} />
+            <meshStandardMaterial color="#475569" roughness={0.95} />
+          </mesh>
+        </group>
+      );
+
+    case 'cabinet':
+      return (
+        <group>
+          {/* Body */}
+          <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.9, 0.52, 0.46]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          {/* Door panels */}
+          <mesh position={[-0.48, 0.45, 0.235]} castShadow>
+            <boxGeometry args={[0.88, 0.46, 0.02]} />
+            <meshStandardMaterial color="#1f2937" roughness={0.6} />
+          </mesh>
+          <mesh position={[0.48, 0.45, 0.235]} castShadow>
+            <boxGeometry args={[0.88, 0.46, 0.02]} />
+            <meshStandardMaterial color="#1f2937" roughness={0.6} />
+          </mesh>
+          {/* Tapered brass legs */}
+          {([[-0.85, -0.18], [0.85, -0.18], [-0.85, 0.18], [0.85, 0.18]] as const).map(([x, z], idx) => (
+            <mesh key={idx} position={[x, 0.1, z]} castShadow>
+              <cylinderGeometry args={[0.018, 0.015, 0.2, 16]} />
+              <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
+            </mesh>
+          ))}
+        </group>
+      );
+
+    case 'vase':
+    default:
+      return (
+        <group>
+          <mesh position={[0, 0.12, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.12, 0.16, 0.24, 32]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          <mesh position={[0, 0.28, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.12, 0.16, 32]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          <mesh position={[0, 0.36, 0]} castShadow>
+            <cylinderGeometry args={[0.08, 0.06, 0.03, 32]} />
+            <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} />
+          </mesh>
+          <mesh position={[0, 0.52, 0]} rotation={[0.1, 0, 0.15]} castShadow>
+            <cylinderGeometry args={[0.005, 0.008, 0.35, 8]} />
+            <meshStandardMaterial color="#78350f" roughness={0.9} />
+          </mesh>
+        </group>
+      );
+  }
+}
+
 interface SceneContentProps {
   modelUrl?: string;
   projectId?: string;
@@ -89,7 +330,6 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
     selectedId,
     setSelectedId,
     setSelectedTransform,
-    selectedMaterial,
     hdrPreset,
     environmentIntensity,
     environmentRotation,
@@ -99,12 +339,13 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
     redo,
     saveToSupabase,
     loadFromSupabase,
+    placedObjects,
   } = useEditorStore();
 
   const { scene } = useThree();
-  const selectedObjectRef = useRef<THREE.Object3D | null>(null);
-  const transformRef = useRef<any>(null);
-  const defaultMeshRef = useRef<THREE.Mesh>(null);
+  const itemRefs = useRef<{ [id: string]: THREE.Group | null }>({});
+  const uploadedModelRef = useRef<THREE.Object3D | null>(null);
+  const [isGizmoDragging, setIsGizmoDragging] = useState(false);
 
   // Load saved metadata from Supabase on start
   useEffect(() => {
@@ -116,12 +357,10 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
   // Keyboard Shortcuts: W, E, R, Ctrl+Z, Ctrl+Shift+Z, Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in inputs
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
 
-      // Transform Modes
       if (e.key === 'w' || e.key === 'W') {
         setTransformMode('translate');
       } else if (e.key === 'e' || e.key === 'E') {
@@ -130,7 +369,6 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
         setTransformMode('scale');
       }
 
-      // Undo / Redo
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         e.preventDefault();
         if (e.shiftKey) {
@@ -143,10 +381,8 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
         redo();
       }
 
-      // Deselect
       if (e.key === 'Escape') {
         setSelectedId(null);
-        selectedObjectRef.current = null;
       }
     };
 
@@ -154,7 +390,7 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setTransformMode, undo, redo, setSelectedId]);
 
-  // Auto-Save interval (Prompt 5: Every 30 seconds debounce)
+  // Auto-Save interval every 30 seconds
   useEffect(() => {
     if (!projectId) return;
     const interval = setInterval(() => {
@@ -163,84 +399,55 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
     return () => clearInterval(interval);
   }, [projectId, scene, saveToSupabase]);
 
-  // Synchronize material changes to selected mesh
-  useEffect(() => {
-    const target = selectedObjectRef.current || defaultMeshRef.current;
-    if (target && (target as THREE.Mesh).material) {
-      const mat = (target as THREE.Mesh).material as THREE.MeshStandardMaterial;
-      if (mat.color) {
-        mat.color.set(selectedMaterial.color);
-        mat.roughness = selectedMaterial.roughness;
-        mat.metalness = selectedMaterial.metalness;
-        mat.needsUpdate = true;
-      }
-    }
-  }, [selectedMaterial]);
-
-  // Handle object selection
-  const handleObjectSelect = (obj: THREE.Object3D) => {
-    selectedObjectRef.current = obj;
-    setSelectedId(obj.uuid);
-    setSelectedTransform({
-      position: [obj.position.x, obj.position.y, obj.position.z],
-      rotation: [
-        THREE.MathUtils.radToDeg(obj.rotation.x),
-        THREE.MathUtils.radToDeg(obj.rotation.y),
-        THREE.MathUtils.radToDeg(obj.rotation.z),
-      ],
-      scale: [obj.scale.x, obj.scale.y, obj.scale.z],
-    });
-  };
-
-  // Sync transform gizmo changes
+  // Sync transform gizmo changes back to store
   const handleTransformChange = () => {
-    const obj = selectedObjectRef.current || defaultMeshRef.current;
+    if (!selectedId) return;
+    const obj = itemRefs.current[selectedId] || (uploadedModelRef.current?.uuid === selectedId ? uploadedModelRef.current : null);
     if (obj) {
-      setSelectedTransform({
-        position: [
-          parseFloat(obj.position.x.toFixed(2)),
-          parseFloat(obj.position.y.toFixed(2)),
-          parseFloat(obj.position.z.toFixed(2)),
-        ],
-        rotation: [
-          parseFloat(THREE.MathUtils.radToDeg(obj.rotation.x).toFixed(1)),
-          parseFloat(THREE.MathUtils.radToDeg(obj.rotation.y).toFixed(1)),
-          parseFloat(THREE.MathUtils.radToDeg(obj.rotation.z).toFixed(1)),
-        ],
-        scale: [
-          parseFloat(obj.scale.x.toFixed(2)),
-          parseFloat(obj.scale.y.toFixed(2)),
-          parseFloat(obj.scale.z.toFixed(2)),
-        ],
-      });
+      const pos: [number, number, number] = [
+        parseFloat(obj.position.x.toFixed(2)),
+        parseFloat(obj.position.y.toFixed(2)),
+        parseFloat(obj.position.z.toFixed(2)),
+      ];
+      const rot: [number, number, number] = [
+        parseFloat(THREE.MathUtils.radToDeg(obj.rotation.x).toFixed(1)),
+        parseFloat(THREE.MathUtils.radToDeg(obj.rotation.y).toFixed(1)),
+        parseFloat(THREE.MathUtils.radToDeg(obj.rotation.z).toFixed(1)),
+      ];
+      const scl: [number, number, number] = [
+        parseFloat(obj.scale.x.toFixed(2)),
+        parseFloat(obj.scale.y.toFixed(2)),
+        parseFloat(obj.scale.z.toFixed(2)),
+      ];
+      setSelectedTransform({ position: pos, rotation: rot, scale: scl });
     }
   };
 
   const handleTransformMouseUp = () => {
+    setIsGizmoDragging(false);
     pushHistory('Transform Object');
   };
 
   const activeTarget = selectedId
-    ? (selectedObjectRef.current || defaultMeshRef.current)
+    ? itemRefs.current[selectedId] || (uploadedModelRef.current?.uuid === selectedId ? uploadedModelRef.current : null)
     : null;
 
   return (
     <>
-      {/* Background & Tone Mapping Environment */}
       <color attach="background" args={['#080c14']} />
 
-      {/* Photorealistic Lighting & Shadows (Prompt 4) */}
-      <ambientLight intensity={0.25} color="#e0f2fe" />
+      {/* Photorealistic Lighting & Shadows */}
+      <ambientLight intensity={0.35} color="#f0f9ff" />
       <directionalLight
-        position={[8, 12, 6]}
-        intensity={2.2}
+        position={[7, 12, 5]}
+        intensity={2.4}
         castShadow
         shadow-bias={-0.0001}
         shadow-mapSize={[2048, 2048]}
       />
-      <pointLight position={[-4, 3, -4]} intensity={0.8} color="#fef08a" />
+      <pointLight position={[-4, 3, -3]} intensity={0.9} color="#fef08a" />
 
-      {/* Realistic HDR Environment with Rotation & Intensity */}
+      {/* Realistic HDR Environment */}
       <Suspense fallback={null}>
         <Environment
           preset={hdrPreset as any}
@@ -250,134 +457,85 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
         />
       </Suspense>
 
-      {/* Room boundary */}
+      {/* Architectural Room */}
       <Room width={7} depth={6} height={3.2} />
 
-      {/* Loaded GLB Model or Default Interactive Furniture Piece */}
-      {modelUrl ? (
+      {/* High-fidelity Contact Shadows on the floor */}
+      <ContactShadows
+        position={[0, 0.003, 0]}
+        opacity={0.7}
+        scale={14}
+        blur={1.6}
+        far={4}
+        resolution={1024}
+        color="#020617"
+      />
+
+      {/* Uploaded GLB Model if present */}
+      {modelUrl && (
         <Suspense fallback={null}>
-          <LoadedModel url={modelUrl} onSelect={handleObjectSelect} />
+          <LoadedModel
+            url={modelUrl}
+            onSelect={(obj) => {
+              uploadedModelRef.current = obj;
+              setSelectedId(obj.uuid);
+            }}
+          />
         </Suspense>
-      ) : (
-        <group position={[0, 0, 0]}>
-          {/* Piece 1: Modern Designer Coffee Table (Default Target) */}
-          <mesh
-            ref={defaultMeshRef}
-            position={[0, 0.25, 0]}
-            castShadow
-            receiveShadow
-            onClick={(e) => {
-              e.stopPropagation();
-              handleObjectSelect(e.object);
-            }}
-          >
-            <boxGeometry args={[1.6, 0.45, 0.9]} />
-            <meshStandardMaterial
-              color={selectedMaterial.color}
-              roughness={selectedMaterial.roughness}
-              metalness={selectedMaterial.metalness}
-            />
-          </mesh>
-
-          {/* Piece 2: Sleek Low-Profile Modern Sofa */}
-          <group position={[0, 0, -1.6]}>
-            {/* Sofa Base */}
-            <mesh
-              position={[0, 0.35, 0]}
-              castShadow
-              receiveShadow
-              onClick={(e) => {
-                e.stopPropagation();
-                handleObjectSelect(e.object);
-              }}
-            >
-              <boxGeometry args={[2.8, 0.5, 1.1]} />
-              <meshStandardMaterial color="#27272a" roughness={0.8} metalness={0.05} />
-            </mesh>
-            {/* Sofa Backrest */}
-            <mesh position={[0, 0.8, -0.4]} castShadow receiveShadow>
-              <boxGeometry args={[2.8, 0.6, 0.3]} />
-              <meshStandardMaterial color="#27272a" roughness={0.85} metalness={0.05} />
-            </mesh>
-            {/* Left Armrest */}
-            <mesh position={[-1.3, 0.55, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.25, 0.45, 1.1]} />
-              <meshStandardMaterial color="#1f2937" roughness={0.8} metalness={0.05} />
-            </mesh>
-            {/* Right Armrest */}
-            <mesh position={[1.3, 0.55, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.25, 0.45, 1.1]} />
-              <meshStandardMaterial color="#1f2937" roughness={0.8} metalness={0.05} />
-            </mesh>
-          </group>
-
-          {/* Piece 3: Accent Lounge Armchair */}
-          <mesh
-            position={[-2.2, 0.4, 0.1]}
-            rotation={[0, Math.PI / 4, 0]}
-            castShadow
-            receiveShadow
-            onClick={(e) => {
-              e.stopPropagation();
-              handleObjectSelect(e.object);
-            }}
-          >
-            <boxGeometry args={[0.9, 0.7, 0.9]} />
-            <meshStandardMaterial color="#065f46" roughness={0.7} metalness={0.1} />
-          </mesh>
-
-          {/* Piece 4: Minimalist Floor Lamp */}
-          <group position={[2.2, 0, -1.8]}>
-            <mesh position={[0, 1.1, 0]} castShadow>
-              <cylinderGeometry args={[0.03, 0.03, 2.2, 16]} />
-              <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh
-              position={[0, 2.1, 0]}
-              castShadow
-              onClick={(e) => {
-                e.stopPropagation();
-                handleObjectSelect(e.object);
-              }}
-            >
-              <cylinderGeometry args={[0.25, 0.35, 0.4, 32]} />
-              <meshStandardMaterial color="#fef08a" roughness={0.3} emissive="#fef08a" emissiveIntensity={0.2} />
-            </mesh>
-          </group>
-
-          {/* Piece 5: Decorative Vase / Art Piece on Table */}
-          <mesh
-            position={[0.35, 0.58, 0]}
-            castShadow
-            receiveShadow
-            onClick={(e) => {
-              e.stopPropagation();
-              handleObjectSelect(e.object);
-            }}
-          >
-            <sphereGeometry args={[0.13, 32, 32]} />
-            <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.15} />
-          </mesh>
-        </group>
       )}
+
+      {/* Dynamic Placed Furniture Pieces */}
+      <group>
+        {placedObjects.map((item) => {
+          const isSelected = selectedId === item.id;
+          return (
+            <group
+              key={item.id}
+              ref={(el) => {
+                itemRefs.current[item.id] = el;
+              }}
+              position={item.position}
+              rotation={[
+                THREE.MathUtils.degToRad(item.rotation[0]),
+                THREE.MathUtils.degToRad(item.rotation[1]),
+                THREE.MathUtils.degToRad(item.rotation[2]),
+              ]}
+              scale={item.scale}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedId(item.id);
+              }}
+            >
+              <FurnitureMesh item={item} />
+              {isSelected && !isWalkthrough && (
+                <mesh position={[0, 0.45, 0]}>
+                  <boxGeometry args={[1.1, 0.95, 1.1]} />
+                  <meshBasicMaterial wireframe color="#38bdf8" transparent opacity={0.3} />
+                </mesh>
+              )}
+            </group>
+          );
+        })}
+      </group>
 
       {/* TransformControls Gizmo */}
       {!isWalkthrough && activeTarget && (
         <TransformControls
-          ref={transformRef}
           object={activeTarget}
           mode={transformMode}
           onObjectChange={handleTransformChange}
+          onMouseDown={() => setIsGizmoDragging(true)}
           onMouseUp={handleTransformMouseUp}
         />
       )}
 
-      {/* Ground Grid */}
+      {/* Floor Grid */}
       <Grid
         infiniteGrid
-        fadeDistance={35}
-        sectionColor="#1e293b"
-        cellColor="#0f172a"
+        fadeDistance={30}
+        sectionColor="#334155"
+        cellColor="#1e293b"
+        position={[0, 0.001, 0]}
         visible={!isWalkthrough}
       />
 
@@ -392,11 +550,12 @@ function SceneContent({ modelUrl, projectId }: SceneContentProps) {
         </>
       ) : (
         <OrbitControls
-          makeDefault={!activeTarget}
+          makeDefault
+          enabled={!isGizmoDragging}
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2 - 0.05}
-          maxDistance={30}
-          minDistance={1}
+          maxDistance={25}
+          minDistance={1.2}
         />
       )}
     </>
@@ -414,11 +573,11 @@ export default function Scene3D({
     <div className="w-full h-full absolute inset-0 z-0" id="canvas-container">
       <Canvas
         shadows={{ type: THREE.PCFSoftShadowMap }}
-        camera={{ position: [0, 2, 5], fov: 60 }}
+        camera={{ position: [0, 2.2, 5.2], fov: 55 }}
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
+          toneMappingExposure: 1.15,
           alpha: true,
         }}
       >

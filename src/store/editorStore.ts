@@ -4,6 +4,74 @@ import { createClient } from '@/utils/supabase/client';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type HdrPreset = 'studio' | 'apartment' | 'city' | 'sunset' | 'dawn' | 'warehouse' | 'night';
+export type FurnitureType = 'sofa' | 'table' | 'chair' | 'lamp' | 'plant' | 'rug' | 'cabinet' | 'vase';
+
+export interface PlacedItem {
+  id: string;
+  name: string;
+  type: FurnitureType;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: [number, number, number];
+  material?: MaterialState;
+}
+
+export const DEFAULT_INITIAL_OBJECTS: PlacedItem[] = [
+  {
+    id: 'starter-sofa',
+    name: 'Modern Modular Sofa',
+    type: 'sofa',
+    position: [0, 0, -1.8],
+    rotation: [0, 0, 0],
+    scale: [1, 1, 1],
+    material: { color: '#27272a', roughness: 0.8, metalness: 0.05 },
+  },
+  {
+    id: 'starter-table',
+    name: 'Marble Coffee Table',
+    type: 'table',
+    position: [0, 0, -0.2],
+    rotation: [0, 0, 0],
+    scale: [1, 1, 1],
+    material: { color: '#f3f4f6', roughness: 0.2, metalness: 0.1 },
+  },
+  {
+    id: 'starter-chair',
+    name: 'Velvet Lounge Chair',
+    type: 'chair',
+    position: [-2.1, 0, -0.1],
+    rotation: [0, 45, 0],
+    scale: [1, 1, 1],
+    material: { color: '#065f46', roughness: 0.7, metalness: 0.1 },
+  },
+  {
+    id: 'starter-lamp',
+    name: 'Brass Floor Lamp',
+    type: 'lamp',
+    position: [2.3, 0, -2.1],
+    rotation: [0, -30, 0],
+    scale: [1, 1, 1],
+    material: { color: '#d4af37', roughness: 0.25, metalness: 0.9 },
+  },
+  {
+    id: 'starter-rug',
+    name: 'Designer Wool Rug',
+    type: 'rug',
+    position: [0, 0.01, -0.8],
+    rotation: [0, 0, 0],
+    scale: [1, 1, 1],
+    material: { color: '#d1d5db', roughness: 0.95, metalness: 0.0 },
+  },
+  {
+    id: 'starter-plant',
+    name: 'Monstera Palm Plant',
+    type: 'plant',
+    position: [-2.6, 0, -2.4],
+    rotation: [0, 15, 0],
+    scale: [1, 1, 1],
+    material: { color: '#166534', roughness: 0.5, metalness: 0.05 },
+  },
+];
 
 export interface ObjectTransform {
   position: [number, number, number];
@@ -72,6 +140,13 @@ export interface EditorState {
   lastSavedAt: string | null;
   errorMessage: string | null;
 
+  // Dynamic Objects / Furniture Catalog
+  placedObjects: PlacedItem[];
+  addPlacedObject: (type: FurnitureType) => void;
+  removePlacedObject: (id: string) => void;
+  updatePlacedObjectTransform: (id: string, position: [number, number, number], rotation: [number, number, number], scale: [number, number, number]) => void;
+  duplicatePlacedObject: (id: string) => void;
+
   // Actions
   setSelectedId: (id: string | null) => void;
   setTransformMode: (mode: TransformMode) => void;
@@ -106,6 +181,74 @@ export interface EditorState {
 const MAX_HISTORY_STEPS = 50;
 
 export const useEditorStore = create<EditorState>((set, get) => ({
+  placedObjects: DEFAULT_INITIAL_OBJECTS,
+  addPlacedObject: (type) => {
+    const newId = 'obj-' + Date.now();
+    const names: Record<FurnitureType, string> = {
+      sofa: 'Modern 3-Seater Sofa',
+      table: 'Designer Coffee Table',
+      chair: 'Lounge Armchair',
+      lamp: 'Floor Arc Lamp',
+      plant: 'Indoor Decorative Plant',
+      rug: 'Geometric Area Rug',
+      cabinet: 'Minimalist Media Credenza',
+      vase: 'Ceramic Art Vase',
+    };
+    const newItem: PlacedItem = {
+      id: newId,
+      name: names[type] || 'New Item',
+      type,
+      position: [(Math.random() - 0.5) * 2, 0, (Math.random() - 0.5) * 2],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      material: { ...get().selectedMaterial },
+    };
+    set((state) => ({
+      placedObjects: [...state.placedObjects, newItem],
+      selectedId: newId,
+      selectedTransform: {
+        position: newItem.position,
+        rotation: newItem.rotation,
+        scale: newItem.scale,
+      },
+    }));
+    get().pushHistory(`Added ${names[type]}`);
+  },
+  removePlacedObject: (id) => {
+    set((state) => ({
+      placedObjects: state.placedObjects.filter(item => item.id !== id),
+      selectedId: state.selectedId === id ? null : state.selectedId,
+    }));
+    get().pushHistory('Removed Item');
+  },
+  updatePlacedObjectTransform: (id, position, rotation, scale) => {
+    set((state) => ({
+      placedObjects: state.placedObjects.map(item =>
+        item.id === id ? { ...item, position, rotation, scale } : item
+      ),
+    }));
+  },
+  duplicatePlacedObject: (id) => {
+    const item = get().placedObjects.find(i => i.id === id);
+    if (!item) return;
+    const newId = 'obj-' + Date.now();
+    const clone: PlacedItem = {
+      ...item,
+      id: newId,
+      name: `${item.name} (Copy)`,
+      position: [item.position[0] + 0.4, item.position[1], item.position[2] + 0.4],
+    };
+    set((state) => ({
+      placedObjects: [...state.placedObjects, clone],
+      selectedId: newId,
+      selectedTransform: {
+        position: clone.position,
+        rotation: clone.rotation,
+        scale: clone.scale,
+      },
+    }));
+    get().pushHistory(`Duplicated ${item.name}`);
+  },
   selectedId: null,
   transformMode: 'translate',
   selectedTransform: {
@@ -144,22 +287,68 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   lastSavedAt: null,
   errorMessage: null,
 
-  setSelectedId: (id) => set({ selectedId: id }),
+  setSelectedId: (id) => {
+    if (!id) {
+      set({ selectedId: null });
+      return;
+    }
+    const item = get().placedObjects.find((i) => i.id === id);
+    if (item) {
+      set({
+        selectedId: id,
+        selectedTransform: {
+          position: item.position,
+          rotation: item.rotation,
+          scale: item.scale,
+        },
+        selectedMaterial: item.material ? { ...item.material } : get().selectedMaterial,
+      });
+    } else {
+      set({ selectedId: id });
+    }
+  },
   setTransformMode: (mode) => set({ transformMode: mode }),
   
   setSelectedTransform: (partial) => {
-    set((state) => ({
-      selectedTransform: {
+    set((state) => {
+      const nextTransform = {
         ...state.selectedTransform,
         ...partial,
-      },
-    }));
+      };
+      const updatedPlacedObjects = state.selectedId
+        ? state.placedObjects.map((item) =>
+            item.id === state.selectedId
+              ? {
+                  ...item,
+                  position: nextTransform.position,
+                  rotation: nextTransform.rotation,
+                  scale: nextTransform.scale,
+                }
+              : item
+          )
+        : state.placedObjects;
+      return {
+        selectedTransform: nextTransform,
+        placedObjects: updatedPlacedObjects,
+      };
+    });
   },
   
   updateMaterial: (key, val) => {
-    set((state) => ({
-      selectedMaterial: { ...state.selectedMaterial, [key]: val },
-    }));
+    set((state) => {
+      const nextMaterial = { ...state.selectedMaterial, [key]: val };
+      const updatedPlacedObjects = state.selectedId
+        ? state.placedObjects.map((item) =>
+            item.id === state.selectedId
+              ? { ...item, material: nextMaterial }
+              : item
+          )
+        : state.placedObjects;
+      return {
+        selectedMaterial: nextMaterial,
+        placedObjects: updatedPlacedObjects,
+      };
+    });
   },
   
   setHdrPreset: (preset) => set({ hdrPreset: preset }),
