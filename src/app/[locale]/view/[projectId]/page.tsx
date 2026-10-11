@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import { Eye, Calendar, Tag, ArrowLeft, Monitor } from 'lucide-react';
 import ShareButton from './share-button';
-import GLBViewer from '@/components/Viewer/GLBViewer';
+import ProfessionalViewer from '@/components/Viewer/ProfessionalViewer';
 import SplatViewer from '@/components/Viewer/SplatViewer';
 
 export default async function ProjectViewPage({
@@ -66,7 +66,7 @@ export default async function ProjectViewPage({
               <div className="aspect-[16/9] rounded-[2rem] bg-gradient-to-br from-neutral-900 to-black border border-white/10 overflow-hidden relative group shadow-2xl">
                 {fileUrl ? (
                   <div className="w-full h-full">
-                    {isGLB ? <GLBViewer url={fileUrl} /> : <SplatViewer url={fileUrl} />}
+                    {isGLB ? <ProfessionalViewer url={fileUrl} projectName={project.name} /> : <SplatViewer url={fileUrl} />}
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
