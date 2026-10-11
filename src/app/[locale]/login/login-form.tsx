@@ -1,13 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
 
-export default function LoginForm() {
+function LoginFormInner() {
   const t = useTranslations('Auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const supabase = createClient();
 
   const [email, setEmail] = useState('');
@@ -32,8 +35,12 @@ export default function LoginForm() {
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
+    if (redirectParam && redirectParam.startsWith('/')) {
+      window.location.href = redirectParam;
+    } else {
+      router.push('/dashboard');
+      router.refresh();
+    }
   };
 
   return (
@@ -130,7 +137,10 @@ export default function LoginForm() {
           <div className="mt-8 pt-6 border-t border-white/10 text-center">
             <p className="text-white/50 text-sm">
               {t('noAccount')}{' '}
-              <Link href="/signup" className="text-emerald-400 hover:text-emerald-300 font-medium transition">
+              <Link
+                href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'}
+                className="text-emerald-400 hover:text-emerald-300 font-medium transition"
+              >
                 {t('signUp')}
               </Link>
             </p>
@@ -138,5 +148,19 @@ export default function LoginForm() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <LoginFormInner />
+    </Suspense>
   );
 }

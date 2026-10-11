@@ -23,6 +23,7 @@ function SignupFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan') || '';
+  const redirectParam = searchParams.get('redirect');
   const supabase = createClient();
 
   const [fullName, setFullName] = useState('');
@@ -91,9 +92,14 @@ function SignupFormInner() {
     } else {
       setSuccess(t('successAccountCreated'));
       if (data?.session) {
-        setTimeout(() => router.push('/projects'), 1500);
+        if (redirectParam && redirectParam.startsWith('/')) {
+          setTimeout(() => { window.location.href = redirectParam; }, 1500);
+        } else {
+          setTimeout(() => router.push('/projects'), 1500);
+        }
       } else {
-        setTimeout(() => router.push('/login'), 2000);
+        const loginUrl = redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login';
+        setTimeout(() => router.push(loginUrl), 2000);
       }
     }
   };
@@ -331,7 +337,10 @@ function SignupFormInner() {
           <div className="mt-8 pt-6 border-t border-white/10 text-center">
             <p className="text-white/50 text-sm">
               {t('haveAccount')}{' '}
-              <Link href="/login" className="text-emerald-400 hover:text-emerald-300 font-medium transition">
+              <Link
+                href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'}
+                className="text-emerald-400 hover:text-emerald-300 font-medium transition"
+              >
                 {t('login')}
               </Link>
             </p>

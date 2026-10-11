@@ -35,24 +35,50 @@ export async function proxy(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const path = request.nextUrl.pathname;
+    const localeMatch = path.match(/^\/(ar|en)(?=\/|$)/);
+    const redirectParam = request.nextUrl.searchParams.get('redirect');
+
+    let currentLocale = localeMatch ? localeMatch[1] : (request.cookies.get('NEXT_LOCALE')?.value || 'ar');
+    if (!['ar', 'en'].includes(currentLocale)) {
+      currentLocale = 'ar';
+    }
+
+    if (!localeMatch && redirectParam?.startsWith('/en')) {
+      currentLocale = 'en';
+    } else if (!localeMatch && redirectParam?.startsWith('/ar')) {
+      currentLocale = 'ar';
+    }
+
     const pathWithoutLocale = path.replace(/^\/(ar|en)/, '') || '/';
+
+    // If request has no locale prefix and is not root (/), redirect to localized path
+    if (!localeMatch && path !== '/') {
+      const targetUrl = new URL(`/${currentLocale}${path}`, request.url);
+      request.nextUrl.searchParams.forEach((val, key) => {
+        targetUrl.searchParams.set(key, val);
+      });
+      return NextResponse.redirect(targetUrl);
+    }
 
     const isProtected = protectedRoutes.some(route => pathWithoutLocale.startsWith(route));
     const isAdmin = adminRoutes.some(route => pathWithoutLocale.startsWith(route));
     const isAdminLogin = pathWithoutLocale === '/admin/login';
 
     if (isProtected && !user) {
-      const url = new URL('/login', request.url);
+      const url = new URL(`/${currentLocale}/login`, request.url);
       url.searchParams.set('redirect', path);
       return NextResponse.redirect(url);
     }
 
     if (isAdmin && !isAdminLogin && !user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      return NextResponse.redirect(new URL(`/${currentLocale}/admin/login`, request.url));
     }
 
     if (user && (pathWithoutLocale === '/login' || pathWithoutLocale === '/signup')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      const target = (redirectParam && redirectParam.startsWith('/'))
+        ? redirectParam
+        : `/${currentLocale}/dashboard`;
+      return NextResponse.redirect(new URL(target, request.url));
     }
   } catch (e) {
   }
@@ -70,5 +96,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/(ar|en)/:path*']
+  matcher: [
+    '/',
+    '/(ar|en)/:path*',
+    '/((?!api|_next|_vercel|.*\\..*).*)',
+  ],
 };
