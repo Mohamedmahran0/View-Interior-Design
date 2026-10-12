@@ -28,16 +28,20 @@ export function useProjects() {
 
       if (fetchError) {
         const msg = fetchError.message || '';
+        // If table doesn't exist yet, gracefully treat as empty projects list instead of alarming normal users
         if (
           msg.toLowerCase().includes('schema cache') ||
           msg.toLowerCase().includes('does not exist') ||
           msg.toLowerCase().includes('find the table')
         ) {
-          setIsSchemaMissing(true);
+          setProjects([]);
+          setError(null);
+          setIsSchemaMissing(false);
+        } else {
+          setError(msg);
         }
-        setError(msg);
       } else {
-        setProjects(data as Project[]);
+        setProjects((data as Project[]) || []);
         setError(null);
         setIsSchemaMissing(false);
       }

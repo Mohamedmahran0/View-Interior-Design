@@ -47,7 +47,7 @@ function StatusBadge({ status }: { status: Project['status'] }) {
 
 export default function DashboardClient() {
   const { user, supabase } = useSupabase();
-  const { projects, loading: projectsLoading, isSchemaMissing } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { subscription, loading: subLoading } = useSubscription();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -118,29 +118,6 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      {isSchemaMissing && (
-        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <p className="font-bold text-white text-sm sm:text-base">تهيئة قاعدة بيانات Supabase (Schema Initialization)</p>
-              <p className="text-xs sm:text-sm text-white/60">
-                يرجى تشغيل ملف <code className="text-amber-300 bg-black/40 px-1.5 py-0.5 rounded">schema.sql</code> في محرر Supabase SQL لمرة واحدة لتفعيل حفظ المشاريع والمزامنة السحابية.
-              </p>
-            </div>
-          </div>
-          <a
-            href="https://supabase.com/dashboard/project/lkdnyojlbugtkrfvxhzh/sql/new"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl transition shrink-0"
-          >
-            فتح Supabase SQL Editor
-          </a>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-6 hover:bg-white/[0.07] transition">

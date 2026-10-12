@@ -20,16 +20,51 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const syncProfileSilently = async (currentUser: User) => {
+      try {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (!existing) {
+          const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'Engineer';
+          const avatarUrl = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null;
+          await supabase.from('profiles').insert({
+            id: currentUser.id,
+            email: currentUser.email!,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            role: 'engineer',
+            subscription_tier: 'free',
+            credits_remaining: 5,
+            status: 'active',
+          });
+        }
+      } catch {
+        // Silently ignore if table is pending
+      }
+    };
+
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
+      if (currentUser) {
+        syncProfileSilently(currentUser);
+      }
     };
 
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        syncProfileSilently(currentUser);
+      }
       router.refresh();
     });
 
